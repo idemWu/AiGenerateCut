@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useLayoutEffect,
+  useState,
   type ReactNode,
 } from "react";
 import { LOCALE_COOKIE_KEY, LOCALE_STORAGE_KEY } from "./config";
@@ -37,24 +38,27 @@ export function LanguageProvider({
   children: ReactNode;
   initialLocale: Locale;
 }) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
+
   useLayoutEffect(() => {
-    persistClientLocale(initialLocale);
-  }, [initialLocale]);
+    persistClientLocale(locale);
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const setLocale = useCallback((newLocale: Locale) => {
-    persistClientLocale(newLocale);
+    setLocaleState(newLocale);
   }, []);
 
   const t = useCallback(
     (key: TranslationKey): string => {
-      return translations[initialLocale][key] ?? key;
+      return translations[locale][key] ?? key;
     },
-    [initialLocale],
+    [locale],
   );
 
   return (
     <LanguageContext.Provider
-      value={{ locale: initialLocale, setLocale, t }}
+      value={{ locale, setLocale, t }}
     >
       {children}
     </LanguageContext.Provider>
