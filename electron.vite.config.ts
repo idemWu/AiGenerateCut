@@ -6,6 +6,7 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
+    base: './',
     server: {
       port: 3000,
       strictPort: true

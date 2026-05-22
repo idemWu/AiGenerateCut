@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { captureCanvasToPngBlob } from "@/lib/studio/capturePreviewFrame";
+import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { StudioClipResponse, StudioTimelineTrackResponse } from "@/lib/api/studio";
 import type { components } from "@/lib/api/schema";
@@ -135,7 +136,7 @@ const StudioPreviewPlayer = forwardRef<StudioPreviewPlayerHandle, StudioPreviewP
       let img = cache.get(url);
       if (!img) {
         img = new Image();
-        img.crossOrigin = "anonymous";
+        img.crossOrigin = STUDIO_MEDIA_CROSS_ORIGIN;
         img.onload = () => onReady?.();
         img.src = url;
         cache.set(url, img);
@@ -285,7 +286,7 @@ const StudioPreviewPlayer = forwardRef<StudioPreviewPlayerHandle, StudioPreviewP
   );
 
   return (
-    <section className="relative flex flex-1 flex-col items-center justify-center p-4">
+    <section className="relative flex flex-1 flex-col items-center justify-center overflow-hidden p-4">
       <div
         className="relative max-h-full max-w-full overflow-hidden rounded-lg bg-black shadow-lg"
         style={{ aspectRatio: `${size.width} / ${size.height}` }}

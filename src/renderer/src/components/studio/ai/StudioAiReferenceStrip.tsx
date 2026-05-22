@@ -8,6 +8,7 @@ import type { TranslationKey } from "@/lib/i18n/translations";
 import { ingestDragPayloadToReferences } from "@/lib/studio/ai/ingestStudioAiDrag";
 import { parseStudioAiDragData, type StudioAiDragPayload } from "@/lib/studio/ai/studioAiDrag";
 import type { StudioAiOperationType } from "@/lib/studio/studioAiModels";
+import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import {
   appendExtraVideoReference,
   getBaseVideoReference,
@@ -541,7 +542,13 @@ function ThumbCell({
       >
         {thumb && !isVideo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={thumb} alt="" className="h-full w-full object-cover" draggable={false} />
+          <img
+            src={thumb}
+            alt=""
+            crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
+            className="h-full w-full object-cover"
+            draggable={false}
+          />
         ) : (
           <span className="flex h-full w-full items-center justify-center text-[10px] font-medium uppercase text-muted-foreground">
             {isVideo ? t("studioAiTypeVideo") : t("studioAiTypeImage")}

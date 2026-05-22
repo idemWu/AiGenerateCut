@@ -1,11 +1,12 @@
 import { waitVideoEvent } from "@/lib/studio/playback/waitVideoFrame";
+import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 
 const SEEK_EPS = 0.02;
 
 export async function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    img.crossOrigin = STUDIO_MEDIA_CROSS_ORIGIN;
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
     img.src = url;
@@ -15,7 +16,7 @@ export async function loadImage(url: string): Promise<HTMLImageElement> {
 export async function loadVideo(url: string): Promise<HTMLVideoElement> {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
-    video.crossOrigin = "anonymous";
+    video.crossOrigin = STUDIO_MEDIA_CROSS_ORIGIN;
     video.preload = "auto";
     video.muted = true;
     video.playsInline = true;

@@ -5,6 +5,7 @@ import { Loader2, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
+import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import { uploadStudioAiReferenceFile } from "@/lib/studio/uploadStudioAiReference";
 
 interface StudioAssetReferenceUploadProps {
@@ -76,7 +77,12 @@ export default function StudioAssetReferenceUpload({
               className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="h-full w-full object-cover" />
+              <img
+                src={src}
+                alt=""
+                crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
+                className="h-full w-full object-cover"
+              />
               <button
                 type="button"
                 onClick={() => handleRemove(index)}

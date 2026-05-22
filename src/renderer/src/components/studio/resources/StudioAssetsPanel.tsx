@@ -32,6 +32,7 @@ import { runAssetGenerationAfterCreate } from "@/lib/studio/assets/pollAssetHist
 import { getModelsForOperationType } from "@/lib/studio/studioAiModels";
 import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
 import { setStudioAiDragData } from "@/lib/studio/ai/studioAiDrag";
+import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import {
   formatStudioAssetFallbackName,
   formatStudioStatusLabel,
@@ -453,6 +454,7 @@ function AssetThumbCard({
         <img
           src={thumbUrl}
           alt=""
+          crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
           className="aspect-square w-full object-cover"
           draggable={false}
         />
@@ -735,7 +737,13 @@ function VariantThumbCard({
     >
       {thumbUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumbUrl} alt="" className="aspect-square w-full object-cover" draggable={false} />
+        <img
+          src={thumbUrl}
+          alt=""
+          crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
+          className="aspect-square w-full object-cover"
+          draggable={false}
+        />
       ) : (
         <div className="flex aspect-square w-full items-center justify-center bg-white/5 text-[10px] text-muted-foreground">
           —
@@ -783,6 +791,7 @@ function AssetVersionsView({
           <img
             src={thumbUrl}
             alt=""
+            crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
             className="h-16 w-16 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
           />
         ) : null}
@@ -890,7 +899,12 @@ function HistoryBatchCard({
               title={t("studioAssetSelectImage")}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="aspect-square w-full object-cover" />
+              <img
+                src={url}
+                alt=""
+                crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
+                className="aspect-square w-full object-cover"
+              />
             </button>
           ))}
         </div>

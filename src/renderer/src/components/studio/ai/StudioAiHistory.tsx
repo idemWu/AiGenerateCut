@@ -17,6 +17,7 @@ import {
   formatStudioOperationTypeLabel,
   formatStudioStatusLabel,
 } from "@/lib/studio/studioI18n";
+import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 
 type StudioWorkflowNodeInputResponse =
   components["schemas"]["StudioWorkflowNodeInputResponse"];
@@ -301,10 +302,17 @@ function HistoryInputThumb({
     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-white/15 bg-white/5">
       {!isVideo ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumbUrl} alt="" className="h-full w-full object-cover" draggable={false} />
+        <img
+          src={thumbUrl}
+          alt=""
+          crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
+          className="h-full w-full object-cover"
+          draggable={false}
+        />
       ) : (
         <video
           src={thumbUrl}
+          crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
           className="h-full w-full object-cover"
           muted
           playsInline
@@ -371,6 +379,7 @@ function DraggableOutputThumb({
         <img
           src={thumbUrl}
           alt=""
+          crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
           className="pointer-events-none max-h-40 w-full rounded-lg object-cover"
           draggable={false}
           onDragStart={(e) => e.preventDefault()}
@@ -378,6 +387,7 @@ function DraggableOutputThumb({
       ) : (
         <video
           src={thumbUrl}
+          crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
           className="pointer-events-none max-h-40 w-full rounded-lg object-cover"
           muted
           playsInline

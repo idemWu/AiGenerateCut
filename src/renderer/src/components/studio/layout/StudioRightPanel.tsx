@@ -10,6 +10,7 @@ import type {
   StudioKeyframeResponse,
 } from "@/lib/api/studio";
 import { setStudioAiDragData } from "@/lib/studio/ai/studioAiDrag";
+import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import type { components } from "@/lib/api/schema";
 import type { StudioPanelPlacement } from "@/lib/studio/studioEditorLayout";
 
@@ -159,6 +160,7 @@ function DraggableResourceThumb({
         <img
           src={thumbUrl}
           alt={label}
+          crossOrigin={STUDIO_MEDIA_CROSS_ORIGIN}
           className="aspect-square rounded-md object-cover ring-1 ring-white/10 transition hover:ring-primary/40"
           draggable={false}
         />
