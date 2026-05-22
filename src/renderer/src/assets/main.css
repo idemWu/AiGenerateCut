@@ -1,0 +1,570 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   Movie Utopia - Premium Cinema Dark Theme
+   ============================================ */
+
+@theme inline {
+  /* Core Colors */
+  --color-background: #141414;
+  --color-foreground: #ffffff;
+
+  /* Primary: Violet */
+  --color-primary: #8b5cf6;
+  --color-primary-foreground: #ffffff;
+
+  /* Header nav active (selected item) */
+  --color-nav-active: #916eff;
+
+  /* Accent: Amber */
+  --color-accent: #f59e0b;
+  --color-accent-foreground: #141414;
+
+  /* Glassmorphism Cards */
+  --color-card: oklch(1 0 0 / 5%);
+  --color-card-foreground: #ffffff;
+
+  /* Borders & Inputs */
+  --color-border: oklch(1 0 0 / 10%);
+  --color-input: oklch(1 0 0 / 10%);
+  --color-ring: #8b5cf6;
+
+  /* Muted */
+  --color-muted: oklch(1 0 0 / 10%);
+  --color-muted-foreground: #a1a1aa;
+
+  /* Secondary */
+  --color-secondary: oklch(1 0 0 / 10%);
+  --color-secondary-foreground: #ffffff;
+
+  /* Popover */
+  --color-popover: #1a1a1a;
+  --color-popover-foreground: #ffffff;
+
+  /* Studio panels */
+  --color-studio-panel: #181a22;
+  --color-studio-sidebar: #1e2030;
+  --color-studio-dialog: #1e1e24;
+
+  /* Destructive */
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  /* Google brand (login/binding icons) */
+  --color-google-blue: #4285f4;
+  --color-google-green: #34a853;
+  --color-google-yellow: #fbbc05;
+  --color-google-red: #ea4335;
+
+  /* Charts */
+  --color-chart-1: #8b5cf6;
+  --color-chart-2: #f59e0b;
+  --color-chart-3: #06b6d4;
+  --color-chart-4: #ec4899;
+  --color-chart-5: #10b981;
+
+  /* Sidebar */
+  --color-sidebar: #1a1a1a;
+  --color-sidebar-foreground: #ffffff;
+  --color-sidebar-primary: #8b5cf6;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: oklch(1 0 0 / 10%);
+  --color-sidebar-accent-foreground: #ffffff;
+  --color-sidebar-border: oklch(1 0 0 / 10%);
+  --color-sidebar-ring: #8b5cf6;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.25rem;
+  --radius-4xl: 1.5rem;
+
+  /* Fonts: Inter + system CJK */
+  --font-sans: var(--font-inter), "Inter", "PingFang SC", "Microsoft YaHei", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-display: var(--font-inter), "Inter", "PingFang SC", "Microsoft YaHei", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", monospace;
+
+  /* Custom Animations */
+  --animate-shimmer: shimmer 8s linear infinite;
+}
+
+/* ============================================
+   Base Layer
+   ============================================ */
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    width: 100%;
+  }
+
+  html,
+  body {
+    margin: 0;
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    user-select: none;
+  }
+
+  .bg-page {
+    isolation: isolate;
+  }
+  .bg-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg, #1a1a2e 0%, #141414 800px, #141414 100%);
+    pointer-events: none;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  /* Japanese: prioritise Hiragino Sans / Yu Gothic over PingFang SC / YaHei */
+  html:lang(ja) {
+    --font-sans: var(--font-inter), "Inter", "Hiragino Sans", "Yu Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-display: var(--font-inter), "Inter", "Hiragino Sans", "Yu Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  :where(button, input, textarea, select, [role="button"]) {
+    @apply outline-ring/50;
+  }
+
+  :where(hr, fieldset, iframe) {
+    @apply border-border;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+  }
+}
+
+/* ============================================
+   Header Height Token
+   ============================================ */
+
+:root {
+  --header-h: 56px;
+}
+@media (min-width: 640px) {
+  :root {
+    --header-h: 80px;
+  }
+}
+
+/* ============================================
+   Workspace Mode (hides site shell for full-screen editors)
+   ============================================ */
+
+body.workspace-mode {
+  --header-h: 0px;
+}
+body.workspace-mode .site-header,
+body.workspace-mode .site-footer {
+  display: none !important;
+}
+
+/* Studio editor: resizable panel drag handles */
+.studio-resize-handle {
+  flex-shrink: 0;
+  background: oklch(1 0 0 / 8%);
+  transition: background 0.2s;
+}
+.studio-resize-handle:hover,
+.studio-resize-handle[data-separator][data-separator-state="drag"] {
+  background: color-mix(in oklch, var(--color-primary) 55%, transparent);
+}
+.studio-resize-handle-x {
+  width: 6px;
+  min-width: 6px;
+  cursor: col-resize;
+}
+.studio-resize-handle-y {
+  height: 6px;
+  min-height: 6px;
+  cursor: row-resize;
+}
+
+.studio-playhead {
+  cursor: ew-resize;
+}
+
+.studio-playhead-head {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--color-accent);
+  filter: drop-shadow(0 0 4px color-mix(in oklch, var(--color-accent) 50%, transparent));
+}
+
+.studio-playhead-line {
+  background: var(--color-accent);
+  box-shadow: 0 0 6px color-mix(in oklch, var(--color-accent) 60%, transparent);
+}
+
+.studio-timeline-ruler {
+  background: color-mix(in oklch, var(--color-foreground) 3%, transparent);
+}
+
+.studio-timeline-ruler-tick-major {
+  width: 1px;
+  height: 12px;
+  background: color-mix(in oklch, var(--color-foreground) 28%, transparent);
+}
+
+.studio-timeline-ruler-tick-minor {
+  width: 1px;
+  height: 6px;
+  background: color-mix(in oklch, var(--color-foreground) 14%, transparent);
+}
+
+.studio-timeline-grid {
+  background-image: repeating-linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--color-foreground) 8%, transparent) 0,
+    color-mix(in oklch, var(--color-foreground) 8%, transparent) 1px,
+    transparent 1px,
+    transparent var(--timeline-minor-step-px, 20px)
+  );
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+@layer utilities {
+  /* Text gradient: violet → amber */
+  .text-gradient {
+    background: linear-gradient(to right, #8b5cf6, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Glassmorphism */
+  .glass {
+    backdrop-filter: blur(16px) saturate(150%);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-premium {
+    backdrop-filter: blur(40px) saturate(180%);
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.8), rgba(10, 10, 10, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.8),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Hide scrollbar but keep scroll */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Custom scrollbar for specific elements */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.4);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.6);
+  }
+}
+
+/* ============================================
+   Keyframe Animations
+   ============================================ */
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out forwards;
+}
+
+.animate-fade-in-delay {
+  opacity: 0;
+  animation: fade-in 1s ease-out 0.3s forwards;
+}
+
+.animate-fade-in-delay-2 {
+  opacity: 0;
+  animation: fade-in 1s ease-out 0.6s forwards;
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-dialog-in {
+  animation: dialog-in 80ms ease-out both;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+/* 轮播背景 Ken Burns 缓慢缩放 */
+@keyframes carousel-ken-burns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
+.animate-carousel-ken-burns {
+  animation: carousel-ken-burns 8s ease-out forwards;
+}
+
+@keyframes partners-marquee-ltr {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+@keyframes partners-marquee-rtl {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.partners-marquee-mask {
+  position: relative;
+  overflow: hidden;
+}
+
+.partners-marquee-mask::before,
+.partners-marquee-mask::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2.5rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.partners-marquee-mask::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--color-background) 0%, transparent 100%);
+}
+
+.partners-marquee-mask::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--color-background) 0%, transparent 100%);
+}
+
+.partners-marquee-track-ltr,
+.partners-marquee-track-rtl {
+  display: flex;
+  width: max-content;
+  min-width: 200%;
+  align-items: center;
+  gap: 0.75rem;
+  animation-duration: 36s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.partners-marquee-track-ltr {
+  animation-name: partners-marquee-ltr;
+}
+
+.partners-marquee-track-rtl {
+  animation-name: partners-marquee-rtl;
+}
+
+@media (min-width: 640px) {
+  .partners-marquee-mask::before,
+  .partners-marquee-mask::after {
+    width: 5rem;
+  }
+
+  .partners-marquee-track-ltr,
+  .partners-marquee-track-rtl {
+    gap: 1rem;
+    animation-duration: 42s;
+  }
+}
+
+/* 合作伙伴区 logo 强制显示为白色 */
+.partners-section .partners-marquee-mask img {
+  filter: brightness(0) invert(1);
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes float-mid {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-mid {
+  animation: float-mid 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-fade-in,
+  .animate-fade-in-delay,
+  .animate-fade-in-delay-2,
+  .animate-dialog-in,
+  .animate-shake,
+  .animate-carousel-ken-burns,
+  .partners-marquee-track-ltr,
+  .partners-marquee-track-rtl,
+  .animate-float-slow,
+  .animate-float-mid,
+  .agent-dot {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================
+   Agent Chat — Typing Dots
+   ============================================ */
+
+@keyframes agent-dot {
+  0%, 80%, 100% {
+    opacity: 0.25;
+    transform: scale(0.75);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.agent-dot {
+  animation: agent-dot 1.4s ease-in-out infinite;
+}
+
+/* ============================================
+   Studio Editor
+   ============================================ */
+
+/* ============================================
+   Studio Page
+   ============================================ */
+
+@keyframes studio-border-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.studio-glow-border {
+  animation: studio-border-glow 3s ease-in-out infinite;
+}
+
+/* ============================================
+   Hero Typography
+   ============================================ */
+
+.hero-title {
+  font-size: clamp(3rem, 8vw + 1rem, 10rem);
+  line-height: 1.1;
+  background: linear-gradient(135deg, #8b5cf6 0%, #f59e0b 50%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw + 0.5rem, 2.5rem);
+  line-height: 1.4;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.9) 0%, rgba(255, 255, 255, 0.9) 50%, rgba(245, 158, 11, 0.9) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Spark fly animation now uses Web Animations API in SparkFlyEffect.tsx */
+
+/* ============================================
+   Overlay Active — Pause page animations
+   ============================================ */
+
+body.overlay-active .site-main *,
+body.overlay-active .site-main *::before,
+body.overlay-active .site-main *::after {
+  animation-play-state: paused !important;
+}
+
