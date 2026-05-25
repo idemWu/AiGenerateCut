@@ -3,6 +3,8 @@ import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { LOCAL_MEDIA_SCHEME, registerLocalMediaProtocol } from './localMedia/localProtocol'
+import { registerLocalMediaIpc } from './localMedia/ipc'
 
 const RENDERER_DIR = join(__dirname, '../renderer')
 
@@ -10,6 +12,16 @@ const RENDERER_DIR = join(__dirname, '../renderer')
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'app',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true
+    }
+  },
+  {
+    scheme: LOCAL_MEDIA_SCHEME,
     privileges: {
       standard: true,
       secure: true,
@@ -76,12 +88,14 @@ app.whenReady().then(async () => {
   if (!isDevRendererServer()) {
     await registerAppProtocol()
   }
+  await registerLocalMediaProtocol()
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
   ipcMain.on('ping', () => console.log('pong'))
+  registerLocalMediaIpc()
 
   createWindow()
 

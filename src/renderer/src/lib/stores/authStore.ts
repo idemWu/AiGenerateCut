@@ -73,7 +73,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       token,
       uid,
       isInvited,
-      showInviteDialog: !isInvited,
+      showInviteDialog: false,
     });
     await get().fetchProfile();
     const pending = get().pendingLoginAction;
@@ -152,7 +152,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         token,
         uid,
         isInvited,
-        showInviteDialog: !isInvited,
+        showInviteDialog: false,
       });
       get().fetchProfile();
     } else {

@@ -3,6 +3,7 @@
 import StudioAiPanel from "@/components/studio/ai/StudioAiPanel";
 import StudioLayoutToggleButton from "@/components/studio/layout/StudioLayoutToggleButton";
 import StudioClipFilterPanel from "@/components/studio/resources/StudioClipFilterPanel";
+import StudioLocalAssetsPanel from "@/components/studio/resources/StudioLocalAssetsPanel";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type {
   StudioClipResponse,
@@ -135,6 +136,18 @@ export default function StudioLeftPanel({
           onTogglePlacement={onTogglePlacement}
           onTracksMutate={onTracksMutate}
         />
+      ) : toolMode === "local" ? (
+        <>
+          <header className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-2">
+            <span className="text-xs font-medium text-foreground">{t("studioLocalAssetsTab")}</span>
+            <StudioLayoutToggleButton
+              placement={placement}
+              onToggle={onTogglePlacement}
+              title={layoutToggleTitle}
+            />
+          </header>
+          <StudioLocalAssetsPanel projectId={projectId} />
+        </>
       ) : toolMode === "workflows" ? (
         <>
           <header className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-2">
@@ -171,7 +184,7 @@ export default function StudioLeftPanel({
             ))}
           </section>
         </>
-      ) : (
+      ) : toolMode === "ai" ? (
         <StudioAiPanel
           projectId={projectId}
           contextMode={aiContextMode}
@@ -212,7 +225,7 @@ export default function StudioLeftPanel({
           layoutToggleTitle={layoutToggleTitle}
           onTogglePlacement={onTogglePlacement}
         />
-      )}
+      ) : null}
     </aside>
   );
 }

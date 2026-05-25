@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { StudioAiOperationType } from "@/lib/studio/studioAiModels";
 
-export type StudioToolMode = "ai" | "workflows" | "filters";
+export type StudioToolMode = "ai" | "workflows" | "filters" | "local";
 
 export type StudioSelectedModelByType = Partial<
   Record<StudioAiOperationType, string>

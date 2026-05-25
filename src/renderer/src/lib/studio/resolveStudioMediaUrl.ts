@@ -1,3 +1,8 @@
+import {
+  localAssetProtocolUrl,
+  parseLocalAssetObjectKey,
+} from "@/lib/studio/localAssets/localAssetUrl";
+
 const R2_IMAGE_BASE =
   import.meta.env.VITE_R2_IMAGE_HOSTNAME
     ? `https://${import.meta.env.VITE_R2_IMAGE_HOSTNAME}`
@@ -9,6 +14,8 @@ export function resolveStudioMediaUrl(
 ): string | null {
   const raw = urlOrKey?.trim();
   if (!raw) return null;
+  const localAssetId = parseLocalAssetObjectKey(raw);
+  if (localAssetId) return localAssetProtocolUrl(localAssetId);
   if (/^https?:\/\//i.test(raw)) return raw;
   if (!R2_IMAGE_BASE) return raw;
   const path = raw.startsWith("/") ? raw : `/${raw}`;
