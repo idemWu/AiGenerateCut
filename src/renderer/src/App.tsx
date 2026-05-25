@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useMatch } from 'react-router-dom'
 import { Toaster } from 'sonner'
+import AccountButton from '@/components/auth/AccountButton'
 import AuthTokenDialog from '@/components/auth/AuthTokenDialog'
 import AppSettingsButton from '@/components/settings/AppSettingsButton'
 import StudioEditorPage from '@/pages/StudioEditorPage'
@@ -20,7 +21,12 @@ function App(): React.JSX.Element {
         <Route path="/:locale/studio/:projectId" element={<StudioEditorPage />} />
         <Route path="*" element={<Navigate to="/studio" replace />} />
       </Routes>
-      {!inStudioEditor ? <AppSettingsButton /> : null}
+      {!inStudioEditor ? (
+        <div className="fixed right-4 top-4 z-[130] flex items-center gap-2">
+          <AccountButton placement="inline" />
+          <AppSettingsButton placement="inline" />
+        </div>
+      ) : null}
       <AuthTokenDialog />
       <Toaster theme="dark" richColors position="top-center" />
     </>

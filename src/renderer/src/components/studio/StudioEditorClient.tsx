@@ -46,6 +46,7 @@ import {
 } from "@/lib/studio/studioAiResources";
 import { pruneVideoPool, removeClipFromVideoPool } from "@/lib/studio/playback/videoPool";
 import { useRequireLogin } from "@/lib/hooks/useRequireLogin";
+import AccountButton from "@/components/auth/AccountButton";
 import AppSettingsButton from "@/components/settings/AppSettingsButton";
 import StudioLeftPanel from "@/components/studio/layout/StudioLeftPanel";
 import StudioRightPanel, {
@@ -875,6 +876,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
           <Download className="mr-1 inline h-3.5 w-3.5" />
           {t("studioExportStart")}
         </button>
+        <AccountButton placement="inline" />
         <AppSettingsButton placement="inline" />
       </header>
 

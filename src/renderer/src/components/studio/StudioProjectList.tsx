@@ -53,7 +53,7 @@ export default function StudioProjectList() {
   }, [aspectRatio, locale, mutate, navigate, requireLogin, t, title]);
 
   return (
-    <div className="mx-auto w-full max-w-[96rem] px-4 py-10 sm:px-6 lg:px-12">
+    <div className="mx-auto w-full max-w-[96rem] px-4 py-12 sm:px-6 lg:px-12">
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
