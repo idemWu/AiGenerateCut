@@ -8,13 +8,33 @@ const R2_IMAGE_BASE =
     ? `https://${import.meta.env.VITE_R2_IMAGE_HOSTNAME}`
     : "";
 
+function parseWrappedLocalAssetObjectKey(raw: string): string | null {
+  try {
+    const url = new URL(raw);
+    const path = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+
+    const fromPath = parseLocalAssetObjectKey(path);
+    if (fromPath) return fromPath;
+
+    for (const segment of path.split("/")) {
+      const assetId = parseLocalAssetObjectKey(segment);
+      if (assetId) return assetId;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 /** 将 API 返回的 object_url 或 object_key 转为可加载的完整 URL */
 export function resolveStudioMediaUrl(
   urlOrKey: string | null | undefined
 ): string | null {
   const raw = urlOrKey?.trim();
   if (!raw) return null;
-  const localAssetId = parseLocalAssetObjectKey(raw);
+  const localAssetId =
+    parseLocalAssetObjectKey(raw) ?? parseWrappedLocalAssetObjectKey(raw);
   if (localAssetId) return localAssetProtocolUrl(localAssetId);
   if (/^https?:\/\//i.test(raw)) return raw;
   if (!R2_IMAGE_BASE) return raw;

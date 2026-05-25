@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { ingestDragPayloadToReferences } from "@/lib/studio/ai/ingestStudioAiDrag";
 import { parseStudioAiDragData, type StudioAiDragPayload } from "@/lib/studio/ai/studioAiDrag";
+import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
 import type { StudioAiOperationType } from "@/lib/studio/studioAiModels";
 import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import {
@@ -522,11 +523,12 @@ function ThumbCell({
   onKeepSoundChange?: (keep: boolean) => void;
 }) {
   const { t } = useLanguage();
-  const thumb =
+  const rawThumb =
     reference.thumbUrl ??
     (reference.source.kind === "upload" && reference.source.mediaType === "image"
       ? reference.source.objectKey
       : null);
+  const thumb = resolveStudioMediaUrl(rawThumb) ?? rawThumb;
   const isVideo =
     reference.source.kind === "node_output"
       ? reference.source.mediaType === "video"
