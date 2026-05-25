@@ -17,6 +17,7 @@ import {
   formatStudioOperationTypeLabel,
   formatStudioStatusLabel,
 } from "@/lib/studio/studioI18n";
+import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
 import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 
 type StudioWorkflowNodeInputResponse =
@@ -154,7 +155,7 @@ function HistoryEntry({
 
         {outputs.map((output) => {
           const isVideo = output.output_type === "video";
-          const thumb = output.object_url;
+          const thumb = resolveStudioMediaUrl(output.object_url);
           const textOut = output.text_content;
 
           if (textOut) {

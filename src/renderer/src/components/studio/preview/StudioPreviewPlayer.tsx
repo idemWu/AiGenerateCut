@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { captureCanvasToPngBlob } from "@/lib/studio/capturePreviewFrame";
+import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
 import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { StudioClipResponse, StudioTimelineTrackResponse } from "@/lib/api/studio";
@@ -138,7 +139,7 @@ const StudioPreviewPlayer = forwardRef<StudioPreviewPlayerHandle, StudioPreviewP
         img = new Image();
         img.crossOrigin = STUDIO_MEDIA_CROSS_ORIGIN;
         img.onload = () => onReady?.();
-        img.src = url;
+        img.src = resolveStudioMediaUrl(url) ?? url;
         cache.set(url, img);
       } else if (!img.complete) {
         img.onload = () => onReady?.();

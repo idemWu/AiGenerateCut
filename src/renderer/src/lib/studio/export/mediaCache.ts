@@ -1,5 +1,10 @@
 import { waitVideoEvent } from "@/lib/studio/playback/waitVideoFrame";
+import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
 import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
+
+function resolveMediaLoadUrl(url: string): string {
+  return resolveStudioMediaUrl(url) ?? url;
+}
 
 const SEEK_EPS = 0.02;
 
@@ -9,7 +14,7 @@ export async function loadImage(url: string): Promise<HTMLImageElement> {
     img.crossOrigin = STUDIO_MEDIA_CROSS_ORIGIN;
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-    img.src = url;
+    img.src = resolveMediaLoadUrl(url);
   });
 }
 
@@ -26,7 +31,7 @@ export async function loadVideo(url: string): Promise<HTMLVideoElement> {
     };
     video.addEventListener("error", () => reject(new Error(`Failed to load video: ${url}`)));
     video.addEventListener("loadeddata", onReady);
-    video.src = url;
+    video.src = resolveMediaLoadUrl(url);
     video.load();
   });
 }
