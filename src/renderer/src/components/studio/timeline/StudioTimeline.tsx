@@ -21,6 +21,13 @@ import StudioTrackLabelColumn from "./StudioTrackLabelColumn";
 import StudioClipContextMenu from "./StudioClipContextMenu";
 import StudioClipRenameDialog from "./StudioClipRenameDialog";
 import { uploadStudioClipAtPlayhead } from "@/lib/studio/uploadStudioClip";
+import { createLocalAssetClip } from "@/lib/studio/localAssets/createLocalAssetClip";
+import { getLocalMediaAsset } from "@/lib/studio/localAssets/localAssetsApi";
+import {
+  parseLocalAssetDragData,
+  STUDIO_LOCAL_ASSET_DRAG_MIME,
+} from "@/lib/studio/localAssets/localAssetDrag";
+import { parseLocalAssetObjectKey } from "@/lib/studio/localAssets/localAssetUrl";
 import { useStudioEditorStore } from "@/lib/stores/studioEditorStore";
 import type { PlayheadSubscriber } from "@/lib/studio/playback/useStudioPlayback";
 import type { components } from "@/lib/api/schema";
@@ -147,6 +154,7 @@ export default function StudioTimeline({
   const [selectedClipIds, setSelectedClipIds] = useState<number[]>([]);
   const [activeClipEditOperation, setActiveClipEditOperation] =
     useState<ClipEditOperation | null>(null);
+  const [missingLocalClipIds, setMissingLocalClipIds] = useState<Set<number>>(() => new Set());
   const dragPlayheadRef = useRef(false);
   const [viewportWidth, setViewportWidth] = useState(0);
 
@@ -197,6 +205,38 @@ export default function StudioTimeline({
   );
 
   const selectedClipIdSet = useMemo(() => new Set(selectedClipIds), [selectedClipIds]);
+
+  useEffect(() => {
+    const localClips = allTimelineClips
+      .map((clip) => ({ clip, assetId: parseLocalAssetObjectKey(clip.media_url) }))
+      .filter((item): item is { clip: StudioClipResponse; assetId: string } => !!item.assetId);
+
+    if (localClips.length === 0) {
+      setMissingLocalClipIds((prev) => (prev.size === 0 ? prev : new Set()));
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const missingIds = await Promise.all(
+        localClips.map(async ({ clip, assetId }) => {
+          try {
+            const asset = await getLocalMediaAsset(projectId, assetId);
+            return asset?.exists ? null : clip.id;
+          } catch {
+            return clip.id;
+          }
+        })
+      );
+      if (!cancelled) {
+        setMissingLocalClipIds(new Set(missingIds.filter((id): id is number => id != null)));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [allTimelineClips, projectId]);
 
   const selectedClips = useMemo(
     () => allTimelineClips.filter((clip) => selectedClipIdSet.has(clip.id)),
@@ -342,6 +382,21 @@ export default function StudioTimeline({
       });
     },
     [durationSec, playheadRef, pxPerSec]
+  );
+
+  const resolveTrackFromEvent = useCallback(
+    (clientY: number): StudioTimelineTrackResponse | null => {
+      const canvas = canvasRef.current;
+      if (!canvas || sortedTracks.length === 0) return null;
+      const rect = canvas.getBoundingClientRect();
+      const yInTrackArea = clientY - rect.top - RULER_HEIGHT;
+      const trackIndex = Math.max(
+        0,
+        Math.min(sortedTracks.length - 1, Math.floor(yInTrackArea / trackRowStride()))
+      );
+      return sortedTracks[trackIndex] ?? null;
+    },
+    [sortedTracks]
   );
 
   // 播放头 DOM + 自动滚动均由 subscribePlayhead 直接写入，零 React 渲染
@@ -806,6 +861,75 @@ export default function StudioTimeline({
     ]
   );
 
+  const handleLocalAssetDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!Array.from(e.dataTransfer.types).includes(STUDIO_LOCAL_ASSET_DRAG_MIME)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const handleLocalAssetDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      const payload = parseLocalAssetDragData(e.dataTransfer);
+      if (!payload) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startSec = resolveSecFromEvent(e.clientX);
+      const targetTrack = resolveTrackFromEvent(e.clientY);
+      if (targetTrack?.is_locked) {
+        toast.error(t("studioTransformTrackLocked"));
+        return;
+      }
+
+      requireLogin(() => {
+        pausePlayback();
+        setClipContextMenu(null);
+        onPlayheadChange(startSec);
+        void (async () => {
+          setUploading(true);
+          try {
+            const clip = await createLocalAssetClip({
+              projectId,
+              payload,
+              startSec,
+              aspectRatio,
+            });
+            const placedClip =
+              targetTrack && targetTrack.id !== clip.track_id
+                ? await updateStudioClip(projectId, clip.id, {
+                    track_id: targetTrack.id,
+                    start_sec: startSec,
+                  })
+                : clip;
+            await onTracksMutate();
+            await onWorkflowsMutate();
+            onClipCreated?.(placedClip.id, placedClip.workflow_id, placedClip.start_sec);
+            toast.success(t("studioTimelineLocalAssetSuccess"));
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : t("studioTimelineSaveFailed");
+            toast.error(msg);
+          } finally {
+            setUploading(false);
+          }
+        })();
+      });
+    },
+    [
+      aspectRatio,
+      onClipCreated,
+      onPlayheadChange,
+      onTracksMutate,
+      onWorkflowsMutate,
+      pausePlayback,
+      projectId,
+      requireLogin,
+      resolveSecFromEvent,
+      resolveTrackFromEvent,
+      t,
+    ]
+  );
+
   if (collapsed) {
     return (
       <button
@@ -885,6 +1009,8 @@ export default function StudioTimeline({
               ["--timeline-minor-step-px" as string]: `${rulerSteps.minorStepPx}px`,
             }}
             onPointerDown={handleCanvasPointerDown}
+            onDragOver={handleLocalAssetDragOver}
+            onDrop={handleLocalAssetDrop}
           >
             <div className="pointer-events-none absolute inset-0 z-30">
               <div
@@ -926,6 +1052,8 @@ export default function StudioTimeline({
                     track={track}
                     pxPerSec={pxPerSec}
                     selectedClipIds={selectedClipIdSet}
+                    missingLocalClipIds={missingLocalClipIds}
+                    missingLocalClipLabel={t("studioLocalAssetsMissing")}
                     dragPreview={dragPreview}
                     dragOrigin={dragOrigin}
                     isDropTarget={targetTrackIndex === trackIndex}
@@ -1188,6 +1316,8 @@ interface TrackRowProps {
   track: StudioTimelineTrackResponse;
   pxPerSec: number;
   selectedClipIds: ReadonlySet<number>;
+  missingLocalClipIds: ReadonlySet<number>;
+  missingLocalClipLabel: string;
   dragPreview: ReturnType<typeof useClipDrag>["preview"];
   getClipStyle: ReturnType<typeof useClipDrag>["getClipStyle"];
   onClipPointerDown: (
@@ -1204,6 +1334,8 @@ function TrackRow({
   track,
   pxPerSec,
   selectedClipIds,
+  missingLocalClipIds,
+  missingLocalClipLabel,
   dragPreview,
   dragOrigin,
   isDropTarget,
@@ -1223,6 +1355,7 @@ function TrackRow({
     >
       {clips.map((clip) => {
         const style = getClipStyle(clip, track.id);
+        const missingLocalClip = missingLocalClipIds.has(clip.id);
 
         if (style.isPlaceholder && dragOrigin) {
           return (
@@ -1253,10 +1386,13 @@ function TrackRow({
             data-clip-block
             onPointerDown={(e) => onClipPointerDown(e, clip, track.id)}
             onContextMenu={(e) => onClipContextMenu(e, clip)}
+            title={missingLocalClip ? missingLocalClipLabel : undefined}
             className={
               "absolute top-1 bottom-1 cursor-grab overflow-hidden rounded border px-1 text-[10px] text-foreground active:cursor-grabbing " +
               (style.conflict
                 ? "border-destructive bg-destructive/20"
+                : missingLocalClip
+                  ? "border-destructive/70 bg-destructive/20 text-destructive"
                 : selectedClipIds.has(clip.id)
                   ? "border-accent bg-accent/25 ring-1 ring-accent/50"
                   : "border-primary/30 bg-primary/20 hover:border-primary/60")

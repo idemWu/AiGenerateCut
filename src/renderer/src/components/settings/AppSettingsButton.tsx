@@ -16,6 +16,7 @@ const SETTINGS_COPY: Record<
   {
     title: string
     subtitle: string
+    devTokenHint: string
     language: string
     token: string
     uid: string
@@ -29,6 +30,7 @@ const SETTINGS_COPY: Record<
   en: {
     title: 'Setting',
     subtitle: 'Language and API connection settings live here.',
+    devTokenHint: 'Developer only: paste an access token if you already have one.',
     language: 'Language',
     token: 'Access token',
     uid: 'User id',
@@ -41,6 +43,7 @@ const SETTINGS_COPY: Record<
   zh: {
     title: '设置',
     subtitle: '语言和 API 连接设置会放在这里。',
+    devTokenHint: '仅开发调试：若已有 access token，可在此粘贴。',
     language: '语言',
     token: 'Access token',
     uid: 'User id',
@@ -53,6 +56,7 @@ const SETTINGS_COPY: Record<
   ja: {
     title: '設定',
     subtitle: '言語と API 接続設定はここに置きます。',
+    devTokenHint: '開発用：既存の access token がある場合のみここに貼り付け。',
     language: '言語',
     token: 'Access token',
     uid: 'User id',
@@ -166,6 +170,10 @@ export default function AppSettingsButton({
                 ))}
               </select>
             </label>
+
+            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground/80">
+              {copy.devTokenHint}
+            </p>
 
             <label className="mt-3 block text-xs font-medium text-muted-foreground">
               {copy.token}

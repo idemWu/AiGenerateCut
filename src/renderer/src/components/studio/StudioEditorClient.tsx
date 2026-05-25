@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Download,
+  FolderOpen,
   GitBranch,
   Loader2,
   SlidersHorizontal,
@@ -881,6 +882,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
         <nav className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-white/10 py-2">
           {(
             [
+              ["local", FolderOpen, t("studioLocalAssetsTab")],
               ["ai", Sparkles, t("studioAiAssistant")],
               ["workflows", GitBranch, t("studioWorkflowList")],
               ["filters", SlidersHorizontal, t("studioFilters")],
