@@ -156,6 +156,7 @@ export default function StudioTimeline({
     useState<ClipEditOperation | null>(null);
   const [missingLocalClipIds, setMissingLocalClipIds] = useState<Set<number>>(() => new Set());
   const dragPlayheadRef = useRef(false);
+  const scrubbingRef = useRef(false);
   const [viewportWidth, setViewportWidth] = useState(0);
 
   const pxPerSec = timelineZoom;
@@ -427,14 +428,33 @@ export default function StudioTimeline({
   const handleCanvasPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if ((e.target as HTMLElement).closest("[data-clip-block]")) return;
+      if (e.button !== 0) return;
       pausePlayback();
       setClipContextMenu(null);
       setSelectedTrackId(null);
       setSelectedClipIds([]);
+      scrubbingRef.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
       onPlayheadChange(resolveSecFromEvent(e.clientX));
     },
     [onPlayheadChange, pausePlayback, resolveSecFromEvent]
   );
+
+  const handleCanvasPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!scrubbingRef.current) return;
+      onPlayheadChange(resolveSecFromEvent(e.clientX));
+    },
+    [onPlayheadChange, resolveSecFromEvent]
+  );
+
+  const endCanvasScrub = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrubbingRef.current) return;
+    scrubbingRef.current = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
 
   const handleSelectTrack = useCallback(
     (trackId: number) => {
@@ -1009,6 +1029,9 @@ export default function StudioTimeline({
               ["--timeline-minor-step-px" as string]: `${rulerSteps.minorStepPx}px`,
             }}
             onPointerDown={handleCanvasPointerDown}
+            onPointerMove={handleCanvasPointerMove}
+            onPointerUp={endCanvasScrub}
+            onPointerCancel={endCanvasScrub}
             onDragOver={handleLocalAssetDragOver}
             onDrop={handleLocalAssetDrop}
           >
