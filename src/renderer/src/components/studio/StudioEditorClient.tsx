@@ -850,17 +850,17 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
 
   return (
     <section className="flex h-full min-h-0 flex-col">
-      <header className="app-region-drag electron-window-control-spacer flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-background/90 px-3 shadow-[0_1px_24px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:px-4">
+      <header className="app-region-drag electron-window-control-spacer flex h-12 shrink-0 cursor-move items-center gap-3 border-b border-white/10 bg-background/90 px-3 shadow-[0_1px_24px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:px-4">
         <Link
           href={withLocalePath(locale, "/studio")}
           className="app-region-no-drag cursor-pointer rounded-lg p-2 text-muted-foreground hover:bg-white/5 hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
-        <h1 className="min-w-0 flex-1 truncate font-display text-sm font-semibold sm:text-base">
+        <h1 className="min-w-0 flex-1 cursor-move truncate font-display text-sm font-semibold sm:text-base">
           {project.title}
         </h1>
-        <span className="hidden rounded-md border border-white/10 px-2 py-0.5 text-xs text-muted-foreground sm:inline">
+        <span className="hidden cursor-move rounded-md border border-white/10 px-2 py-0.5 text-xs text-muted-foreground sm:inline">
           {project.aspect_ratio}
         </span>
         <button

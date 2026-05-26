@@ -23,7 +23,7 @@ function App(): React.JSX.Element {
       </Routes>
       {!inStudioEditor ? (
         <>
-          <div className="app-region-drag fixed left-0 right-[138px] top-0 z-[90] h-10" />
+          <div className="app-region-drag fixed left-0 right-[138px] top-0 z-[90] h-10 cursor-move " />
           <div className="app-region-no-drag fixed right-[150px] top-2 z-[130] flex items-center gap-2">
             <AccountButton placement="inline" />
             <AppSettingsButton placement="inline" />

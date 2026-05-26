@@ -203,10 +203,20 @@ body.workspace-mode .site-footer {
 /* Electron frameless window drag regions */
 .app-region-drag {
   -webkit-app-region: drag;
+  cursor: move !important;
+}
+
+.app-region-drag :where(*:not(.app-region-no-drag, .app-region-no-drag *)) {
+  cursor: move !important;
 }
 
 .app-region-no-drag {
   -webkit-app-region: no-drag;
+  cursor: auto !important;
+}
+
+.app-region-no-drag :where(*) {
+  cursor: revert;
 }
 
 .electron-window-control-spacer {
