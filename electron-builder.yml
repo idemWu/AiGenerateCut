@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: electron-studio
+appId: com.movieutopia.studio
+productName: Movie Utopia Studio
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: electron-studio
+  executableName: movie-utopia-studio
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

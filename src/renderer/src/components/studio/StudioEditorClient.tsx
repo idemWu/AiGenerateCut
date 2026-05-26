@@ -850,10 +850,10 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
 
   return (
     <section className="flex h-full min-h-0 flex-col">
-      <header className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 px-3 sm:px-4">
+      <header className="app-region-drag electron-window-control-spacer flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-background/90 px-3 shadow-[0_1px_24px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:px-4">
         <Link
           href={withLocalePath(locale, "/studio")}
-          className="cursor-pointer rounded-lg p-2 text-muted-foreground hover:bg-white/5 hover:text-foreground"
+          className="app-region-no-drag cursor-pointer rounded-lg p-2 text-muted-foreground hover:bg-white/5 hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
@@ -865,7 +865,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
         </span>
         <button
           type="button"
-          className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-foreground sm:text-sm"
+          className="app-region-no-drag cursor-pointer rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/10 sm:text-sm"
           onClick={() =>
             requireLogin(() => {
               pausePlayback();
@@ -876,8 +876,10 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
           <Download className="mr-1 inline h-3.5 w-3.5" />
           {t("studioExportStart")}
         </button>
-        <AccountButton placement="inline" />
-        <AppSettingsButton placement="inline" />
+        <div className="app-region-no-drag flex items-center gap-2">
+          <AccountButton placement="inline" />
+          <AppSettingsButton placement="inline" />
+        </div>
       </header>
 
       <section className="flex min-h-0 flex-1">

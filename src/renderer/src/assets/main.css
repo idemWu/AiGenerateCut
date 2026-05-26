@@ -200,6 +200,19 @@ body.workspace-mode .site-footer {
   display: none !important;
 }
 
+/* Electron frameless window drag regions */
+.app-region-drag {
+  -webkit-app-region: drag;
+}
+
+.app-region-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.electron-window-control-spacer {
+  padding-right: 138px;
+}
+
 /* Studio editor: resizable panel drag handles */
 .studio-resize-handle {
   flex-shrink: 0;

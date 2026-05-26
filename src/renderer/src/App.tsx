@@ -22,10 +22,13 @@ function App(): React.JSX.Element {
         <Route path="*" element={<Navigate to="/studio" replace />} />
       </Routes>
       {!inStudioEditor ? (
-        <div className="fixed right-4 top-4 z-[130] flex items-center gap-2">
-          <AccountButton placement="inline" />
-          <AppSettingsButton placement="inline" />
-        </div>
+        <>
+          <div className="app-region-drag fixed left-0 right-[138px] top-0 z-[90] h-10" />
+          <div className="app-region-no-drag fixed right-[150px] top-2 z-[130] flex items-center gap-2">
+            <AccountButton placement="inline" />
+            <AppSettingsButton placement="inline" />
+          </div>
+        </>
       ) : null}
       <AuthTokenDialog />
       <Toaster theme="dark" richColors position="top-center" />
