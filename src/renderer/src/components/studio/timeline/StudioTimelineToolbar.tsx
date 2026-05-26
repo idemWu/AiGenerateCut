@@ -34,14 +34,15 @@ function SplitClipIcon({ className }: { className?: string }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <rect x="3" y="6" width="18" height="12" rx="2" />
-      <path d="M12 4v16" />
-      <path d="M8 12h2" />
-      <path d="M14 12h2" />
+      <path d="M12 5v14" strokeDasharray="1.5 2.5" />
+      <path d="M4.5 7H7v3" />
+      <path d="M7 14v3H4.5" />
+      <path d="M19.5 7H17v3" />
+      <path d="M17 14v3h2.5" />
     </svg>
   );
 }
@@ -54,14 +55,13 @@ function TrimLeftIcon({ className }: { className?: string }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <rect x="4" y="6" width="16" height="12" rx="2" />
-      <path d="M12 4v16" />
-      <path d="M8 12h2" />
-      <path d="M16 10l-2 2 2 2" />
+      <path d="M6.5 7H9v3" />
+      <path d="M9 14v3H6.5" />
+      <path d="M16 5v14" strokeDasharray="1.5 2.5" />
     </svg>
   );
 }
@@ -74,15 +74,65 @@ function TrimRightIcon({ className }: { className?: string }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17.5 7H15v3" />
+      <path d="M15 14v3h2.5" />
+      <path d="M8 5v14" strokeDasharray="1.5 2.5" />
+    </svg>
+  );
+}
+
+function SelectAllLeftIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <rect x="4" y="6" width="16" height="12" rx="2" />
-      <path d="M12 4v16" />
-      <path d="M8 10l2 2-2 2" />
-      <path d="M14 12h2" />
+      <path d="M10 5 5 8.5 10 12" />
+      <path d="M5 8.5h14" />
+      <path d="M10 12 5 15.5 10 19" />
+      <path d="M5 15.5h14" />
     </svg>
+  );
+}
+
+function SelectAllRightIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14 5 19 8.5 14 12" />
+      <path d="M5 8.5h14" />
+      <path d="M14 12 19 15.5 14 19" />
+      <path d="M5 15.5h14" />
+    </svg>
+  );
+}
+
+function ButtonTooltip({ label }: { label: string }) {
+  return (
+    <span
+      role="tooltip"
+      className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-white/10 bg-popover px-2 py-1 text-[11px] font-medium text-popover-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+    >
+      {label}
+    </span>
   );
 }
 
@@ -153,8 +203,8 @@ export default function StudioTimelineToolbar({
   const toolbarRef = useRef<HTMLElement>(null);
   const [twoRowLayout, setTwoRowLayout] = useState(false);
   const editingClip = activeClipEditOperation != null;
-  const actionButtonClass =
-    "inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-foreground hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50";
+  const iconActionButtonClass =
+    "group relative inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs text-foreground hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50";
 
   useEffect(() => {
     const el = toolbarRef.current;
@@ -194,41 +244,45 @@ export default function StudioTimelineToolbar({
               type="button"
               disabled={creatingClip}
               onClick={onCreateClip}
-              className={actionButtonClass}
+              className={iconActionButtonClass}
+              aria-label={t("studioTimelineCreateClip")}
             >
               {creatingClip ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Plus className="h-3 w-3" />
+                <Plus className="h-4 w-4" />
               )}
-              {t("studioTimelineCreateClip")}
+              <ButtonTooltip label={t("studioTimelineCreateClip")} />
             </button>
             <button
               type="button"
               disabled={uploading}
               onClick={onUploadClick}
-              className={actionButtonClass}
+              className={iconActionButtonClass}
+              aria-label={uploading ? t("studioTimelineUploading") : t("studioTimelineUpload")}
             >
               {uploading ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Upload className="h-3 w-3" />
+                <Upload className="h-4 w-4" />
               )}
-              {uploading ? t("studioTimelineUploading") : t("studioTimelineUpload")}
+              <ButtonTooltip
+                label={uploading ? t("studioTimelineUploading") : t("studioTimelineUpload")}
+              />
             </button>
             <button
               type="button"
               disabled={capturingKeyframe}
               onClick={onCaptureKeyframe}
-              title={t("studioTimelineCaptureKeyframe")}
-              className={actionButtonClass}
+              className={iconActionButtonClass}
+              aria-label={t("studioTimelineCaptureKeyframe")}
             >
               {capturingKeyframe ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Camera className="h-3 w-3" />
+                <Camera className="h-4 w-4" />
               )}
-              <span className="hidden sm:inline">{t("studioImageKeyframe")}</span>
+              <ButtonTooltip label={t("studioTimelineCaptureKeyframe")} />
             </button>
           </div>
           <div className="h-5 w-px shrink-0 bg-white/10" />
@@ -237,21 +291,21 @@ export default function StudioTimelineToolbar({
               type="button"
               disabled={selectedClipCount !== 1}
               onClick={onRenameClip}
-              className={actionButtonClass}
-              title={t("studioClipRename")}
+              className={iconActionButtonClass}
+              aria-label={t("studioClipRename")}
             >
-              <Pencil className="h-3 w-3" />
-              <span className="hidden sm:inline">{t("studioClipRename")}</span>
+              <Pencil className="h-4 w-4" />
+              <ButtonTooltip label={t("studioClipRename")} />
             </button>
             <button
               type="button"
               disabled={selectedClipCount === 0}
               onClick={onDeleteClip}
-              className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-red-400 hover:border-red-400/40 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-              title={t("studioTimelineDeleteClip")}
+              className={`${iconActionButtonClass} text-red-400 hover:border-red-400/40 hover:bg-red-500/10`}
+              aria-label={t("studioTimelineDeleteClip")}
             >
-              <Trash2 className="h-3 w-3" />
-              <span className="hidden sm:inline">{t("studioTimelineDeleteClip")}</span>
+              <Trash2 className="h-4 w-4" />
+              <ButtonTooltip label={t("studioTimelineDeleteClip")} />
             </button>
           </div>
           <div className="h-5 w-px shrink-0 bg-white/10" />
@@ -259,69 +313,69 @@ export default function StudioTimelineToolbar({
             type="button"
             disabled={!canEditClipAtPlayhead || editingClip}
             onClick={onTrimClipLeftAtPlayhead}
-            className={`${actionButtonClass} ${
+            className={`${iconActionButtonClass} w-10 ${
               canEditClipAtPlayhead ? "border-accent/60 bg-accent/20 text-accent" : ""
             }`}
-            title={t("studioTimelineTrimLeft")}
+            aria-label={t("studioTimelineTrimLeft")}
           >
             {activeClipEditOperation === "trimLeft" ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <TrimLeftIcon className="h-3 w-3" />
+              <TrimLeftIcon className="h-5 w-5" />
             )}
-            <span className="hidden sm:inline">{t("studioTimelineTrimLeft")}</span>
+            <ButtonTooltip label={t("studioTimelineTrimLeft")} />
           </button>
           <button
             type="button"
             disabled={!canEditClipAtPlayhead || editingClip}
             onClick={onSplitClipAtPlayhead}
-            className={`${actionButtonClass} ${
+            className={`${iconActionButtonClass} ${
               canEditClipAtPlayhead ? "border-accent/60 bg-accent/20 text-accent" : ""
             }`}
-            title={t("studioTimelineCutTool")}
+            aria-label={t("studioTimelineCutTool")}
           >
             {activeClipEditOperation === "split" ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <SplitClipIcon className="h-3 w-3" />
+              <SplitClipIcon className="h-5 w-8" />
             )}
-            <span className="hidden sm:inline">{t("studioTimelineCutTool")}</span>
+            <ButtonTooltip label={t("studioTimelineCutTool")} />
           </button>
           <button
             type="button"
             disabled={!canEditClipAtPlayhead || editingClip}
             onClick={onTrimClipRightAtPlayhead}
-            className={`${actionButtonClass} ${
+            className={`${iconActionButtonClass} ${
               canEditClipAtPlayhead ? "border-accent/60 bg-accent/20 text-accent" : ""
             }`}
-            title={t("studioTimelineTrimRight")}
+            aria-label={t("studioTimelineTrimRight")}
           >
             {activeClipEditOperation === "trimRight" ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <TrimRightIcon className="h-3 w-3" />
+              <TrimRightIcon className="h-5 w-5" />
             )}
-            <span className="hidden sm:inline">{t("studioTimelineTrimRight")}</span>
+            <ButtonTooltip label={t("studioTimelineTrimRight")} />
           </button>
           <button
             type="button"
             disabled={leftSelectableClipCount === 0}
             onClick={onSelectAllLeft}
-            className={actionButtonClass}
-            title={t("studioTimelineSelectAllLeft")}
+            className={iconActionButtonClass}
+            aria-label={t("studioTimelineSelectAllLeft")}
           >
-            <SkipBack className="h-3 w-3" />
-            <span className="hidden sm:inline">{t("studioTimelineSelectAllLeft")}</span>
+            <SelectAllLeftIcon className="h-5 w-5" />
+            <ButtonTooltip label={t("studioTimelineSelectAllLeft")} />
           </button>
           <button
             type="button"
             disabled={rightSelectableClipCount === 0}
             onClick={onSelectAllRight}
-            className={actionButtonClass}
-            title={t("studioTimelineSelectAllRight")}
+            className={iconActionButtonClass}
+            aria-label={t("studioTimelineSelectAllRight")}
           >
-            <SkipForward className="h-3 w-3" />
-            <span className="hidden sm:inline">{t("studioTimelineSelectAllRight")}</span>
+            <SelectAllRightIcon className="h-5 w-5" />
+            <ButtonTooltip label={t("studioTimelineSelectAllRight")} />
           </button>
         </div>
 

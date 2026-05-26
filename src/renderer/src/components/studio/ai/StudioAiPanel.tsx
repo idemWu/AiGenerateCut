@@ -159,6 +159,7 @@ export default function StudioAiPanel({
           <StudioAiHistory
             projectId={projectId}
             nodes={nodes}
+            models={models}
             pendingInputThumbsByNodeId={pendingInputThumbsByNodeId}
             useApplyAction={useApplyAction}
             onApplyToClip={onApplyToClip}

@@ -19,6 +19,10 @@ import {
 } from "@/lib/studio/studioI18n";
 import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
 import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
+import {
+  flattenStudioModels,
+  type StudioAiModelListResponse,
+} from "@/lib/studio/studioAiModels";
 
 type StudioWorkflowNodeInputResponse =
   components["schemas"]["StudioWorkflowNodeInputResponse"];
@@ -26,6 +30,7 @@ type StudioWorkflowNodeInputResponse =
 interface StudioAiHistoryProps {
   projectId: number;
   nodes: StudioWorkflowNodeResponse[];
+  models: StudioAiModelListResponse | undefined;
   useApplyAction: boolean;
   pendingInputThumbsByNodeId: ReadonlyMap<number, PendingNodeInputThumb[]>;
   onApplyToClip: (outputId: number, mediaType: string, duration?: number) => void;
@@ -36,6 +41,7 @@ interface StudioAiHistoryProps {
 export default function StudioAiHistory({
   projectId,
   nodes,
+  models,
   useApplyAction,
   pendingInputThumbsByNodeId,
   onApplyToClip,
@@ -54,15 +60,24 @@ export default function StudioAiHistory({
     return map;
   }, [keyframes]);
 
+  const modelNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const model of flattenStudioModels(models)) {
+      map.set(model.id, model.name?.trim() || model.id);
+    }
+    return map;
+  }, [models]);
+
   const sorted = [...nodes].sort((a, b) => {
     const ta = new Date(a.created_at).getTime();
     const tb = new Date(b.created_at).getTime();
     return ta - tb;
   });
+  const nodeStatusKey = nodes.map((n) => n.status).join(",");
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [nodes.length, nodes.map((n) => n.status).join(",")]);
+  }, [nodes.length, nodeStatusKey]);
 
   if (sorted.length === 0) {
     return (
@@ -79,6 +94,7 @@ export default function StudioAiHistory({
           key={node.id}
           node={node}
           keyframesById={keyframesById}
+          modelNameById={modelNameById}
           pendingThumbs={pendingInputThumbsByNodeId.get(node.id)}
           useApplyAction={useApplyAction}
           onApplyToClip={onApplyToClip}
@@ -94,6 +110,7 @@ export default function StudioAiHistory({
 interface HistoryEntryProps {
   node: StudioWorkflowNodeResponse;
   keyframesById: Map<number, string | null | undefined>;
+  modelNameById: ReadonlyMap<string, string>;
   pendingThumbs?: PendingNodeInputThumb[];
   useApplyAction: boolean;
   onApplyToClip: (outputId: number, mediaType: string, duration?: number) => void;
@@ -104,6 +121,7 @@ interface HistoryEntryProps {
 function HistoryEntry({
   node,
   keyframesById,
+  modelNameById,
   pendingThumbs,
   useApplyAction,
   onApplyToClip,
@@ -115,6 +133,8 @@ function HistoryEntry({
   const outputs = node.outputs ?? [];
   const operationLabel = formatStudioOperationTypeLabel(node.operation_type, t);
   const statusLabel = formatStudioStatusLabel(node.status, t);
+  const prompt = node.prompt?.trim();
+  const metaItems = getResultMetaItems(node, modelNameById);
 
   return (
     <article className="flex flex-col gap-2">
@@ -125,6 +145,17 @@ function HistoryEntry({
       />
 
       <div className="mr-auto max-w-[92%] rounded-xl rounded-tl-sm border border-white/10 bg-white/5 p-2">
+        {prompt ? (
+          <div className="mb-2 rounded-lg border border-white/10 bg-black/15 px-2.5 py-2">
+            <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+              {t("studioPrompt")}
+            </p>
+            <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">
+              {prompt}
+            </p>
+          </div>
+        ) : null}
+
         <header className="mb-1 flex items-center gap-2 text-[10px] uppercase text-muted-foreground">
           <span>{operationLabel}</span>
           <span>·</span>
@@ -221,9 +252,45 @@ function HistoryEntry({
             )}
           </div>
         ) : null}
+
+        <div className="mt-2 flex flex-wrap gap-1.5 border-t border-white/10 pt-2">
+          {metaItems.map((item, index) => (
+            <span
+              key={`${item}-${index}`}
+              className="max-w-32 truncate rounded-full bg-white/5 px-2 py-1 text-[10px] text-foreground"
+              title={item}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
       </div>
     </article>
   );
+}
+
+function getResultMetaItems(
+  node: StudioWorkflowNodeResponse,
+  modelNameById: ReadonlyMap<string, string>
+): string[] {
+  return [
+    formatModelMetaValue(node.model, modelNameById),
+    formatMetaValue(node.aspect_ratio),
+    formatMetaValue(node.image_size),
+  ];
+}
+
+function formatModelMetaValue(
+  modelId: string | null | undefined,
+  modelNameById: ReadonlyMap<string, string>
+): string {
+  const id = modelId?.trim();
+  if (!id) return "—";
+  return modelNameById.get(id) ?? id;
+}
+
+function formatMetaValue(value: string | null | undefined): string {
+  return value?.trim() || "—";
 }
 
 interface UserRequestBubbleProps {
@@ -242,7 +309,6 @@ function UserRequestBubble({ node, keyframesById, pendingThumbs }: UserRequestBu
   const mediaInputs = (node.inputs ?? []).filter(
     (input) => input.media_type === "image" || input.media_type === "video"
   );
-  const hasPrompt = Boolean(node.prompt?.trim());
 
   const thumbItems = useMemo(() => {
     if (mediaInputs.length > 0) {
@@ -263,27 +329,22 @@ function UserRequestBubble({ node, keyframesById, pendingThumbs }: UserRequestBu
 
   const visibleThumbs = thumbItems.filter((item) => item.thumbUrl);
 
-  if (!hasPrompt && visibleThumbs.length === 0) {
+  if (visibleThumbs.length === 0) {
     return null;
   }
 
   return (
     <div className="ml-auto max-w-[92%] rounded-xl rounded-tr-sm bg-primary/20 px-3 py-2 text-xs text-foreground">
-      {visibleThumbs.length > 0 ? (
-        <div className="mb-1.5 flex flex-wrap gap-1">
-          {visibleThumbs.map((item) => (
-            <HistoryInputThumb
-              key={item.key}
-              thumbUrl={item.thumbUrl!}
-              mediaType={item.mediaType}
-              roleLabel={item.roleLabel}
-            />
-          ))}
-        </div>
-      ) : null}
-      {hasPrompt ? (
-        <p className="whitespace-pre-wrap leading-relaxed">{node.prompt}</p>
-      ) : null}
+      <div className="flex flex-wrap gap-1">
+        {visibleThumbs.map((item) => (
+          <HistoryInputThumb
+            key={item.key}
+            thumbUrl={item.thumbUrl!}
+            mediaType={item.mediaType}
+            roleLabel={item.roleLabel}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -302,7 +363,6 @@ function HistoryInputThumb({
   return (
     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-white/15 bg-white/5">
       {!isVideo ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={thumbUrl}
           alt=""
@@ -376,7 +436,6 @@ function DraggableOutputThumb({
       title={t("studioAiDragHint")}
     >
       {mediaType === "image" ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={thumbUrl}
           alt=""
