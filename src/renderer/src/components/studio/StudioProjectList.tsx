@@ -1,30 +1,87 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useNavigate } from "react-router-dom";
 import { Clapperboard, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import type { Locale } from "@/lib/i18n/translations";
 import { withLocalePath } from "@/lib/i18n/routing";
 import { createStudioProject } from "@/lib/api/studio";
 import { useStudioProjects } from "@/lib/hooks/useStudio";
 import { useRequireLogin } from "@/lib/hooks/useRequireLogin";
+import { useAuthStore } from "@/lib/stores/authStore";
 import type { components } from "@/lib/api/schema";
 
 type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
 
+const PAGE_SIZE = 24;
 const ASPECT_RATIOS: StudioAspectRatio[] = ["16:9", "9:16", "1:1", "4:3", "3:4"];
+const PAGINATION_COPY: Record<
+  Locale,
+  {
+    previous: string;
+    next: string;
+    status: (page: number, totalPages: number, total: number) => string;
+  }
+> = {
+  en: {
+    previous: "Previous",
+    next: "Next",
+    status: (page, totalPages, total) => `Page ${page} of ${totalPages} · ${total} projects`,
+  },
+  zh: {
+    previous: "上一页",
+    next: "下一页",
+    status: (page, totalPages, total) => `第 ${page} / ${totalPages} 页 · 共 ${total} 个项目`,
+  },
+  ja: {
+    previous: "前へ",
+    next: "次へ",
+    status: (page, totalPages, total) => `${page} / ${totalPages} ページ · 全 ${total} 件`,
+  },
+};
 
 export default function StudioProjectList() {
   const { t, locale } = useLanguage();
   const navigate = useNavigate();
   const requireLogin = useRequireLogin();
-  const { projects, isLoading, mutate } = useStudioProjects(1, 24);
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const [page, setPage] = useState(1);
+  const { projects, total, isLoading, mutate } = useStudioProjects(page, PAGE_SIZE, {
+    enabled: isLoggedIn,
+  });
+  const wasLoggedInRef = useRef(isLoggedIn);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [aspectRatio, setAspectRatio] = useState<StudioAspectRatio>("16:9");
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const paginationCopy = PAGINATION_COPY[locale];
+  const showPagination = totalPages > 1;
+
+  useEffect(() => {
+    if (!wasLoggedInRef.current && isLoggedIn) {
+      setPage(1);
+      void mutate();
+    }
+    wasLoggedInRef.current = isLoggedIn;
+  }, [isLoggedIn, mutate]);
+
+  useEffect(() => {
+    if (!isLoading && page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [isLoading, page, totalPages]);
+
+  const handlePreviousPage = useCallback(() => {
+    setPage((current) => Math.max(1, current - 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setPage((current) => Math.min(totalPages, current + 1));
+  }, [totalPages]);
 
   const handleCreate = useCallback(() => {
     requireLogin(async () => {
@@ -99,6 +156,30 @@ export default function StudioProjectList() {
           ))}
         </div>
       )}
+
+      {showPagination ? (
+        <div className="mt-8 flex flex-col items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-muted-foreground sm:flex-row">
+          <span>{paginationCopy.status(page, totalPages, total)}</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1 || isLoading}
+              onClick={handlePreviousPage}
+              className="cursor-pointer rounded-lg border border-white/10 px-3 py-1.5 text-foreground transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {paginationCopy.previous}
+            </button>
+            <button
+              type="button"
+              disabled={page >= totalPages || isLoading}
+              onClick={handleNextPage}
+              className="cursor-pointer rounded-lg border border-white/10 px-3 py-1.5 text-foreground transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {paginationCopy.next}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {dialogOpen ? (
         <div
