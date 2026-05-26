@@ -20,6 +20,7 @@ import {
   resolveClipSourceSize,
   screenToCanvas,
   transformToApiRecord,
+  type MediaDrawRect,
   type StudioClipTransform,
 } from "@/lib/studio/composition/clipTransform";
 import { isPlaceholderClip } from "@/lib/studio/studioClipUtils";
@@ -29,13 +30,16 @@ import {
 } from "@/lib/studio/playback/resolveClipsAtTime";
 import { useStudioEditorStore } from "@/lib/stores/studioEditorStore";
 
-type DragMode = "move" | "scale" | "rotate";
+type DragMode = "move" | "scale" | "rotate" | "resize-x";
+type ResizeSide = "left" | "right";
 
 interface DragState {
   mode: DragMode;
+  side?: ResizeSide;
   pointerId: number;
   startPointer: { x: number; y: number };
   startTransform: StudioClipTransform;
+  startRect?: MediaDrawRect;
   startCenter: { x: number; y: number };
   startDist: number;
   startAngle: number;
@@ -52,6 +56,7 @@ interface PendingTextMove {
 
 const TEXT_DOUBLE_TAP_MS = 350;
 const POINTER_DRAG_THRESHOLD = 5;
+const MIN_RESIZE_WIDTH = 16;
 
 function transformsNearlyEqual(a: StudioClipTransform, b: StudioClipTransform): boolean {
   const eps = 0.001;
@@ -59,7 +64,9 @@ function transformsNearlyEqual(a: StudioClipTransform, b: StudioClipTransform): 
     Math.abs(a.x - b.x) < eps &&
     Math.abs(a.y - b.y) < eps &&
     Math.abs(a.scale - b.scale) < eps &&
-    Math.abs(a.rotation - b.rotation) < eps
+    Math.abs(a.rotation - b.rotation) < eps &&
+    Math.abs((a.scaleX ?? 1) - (b.scaleX ?? 1)) < eps &&
+    Math.abs((a.scaleY ?? 1) - (b.scaleY ?? 1)) < eps
   );
 }
 
@@ -91,6 +98,11 @@ const CORNERS: { id: string; x: string; y: string; cursor: string }[] = [
   { id: "bl", x: "0%", y: "100%", cursor: "nesw-resize" },
 ];
 
+const SIDE_HANDLES: { id: ResizeSide; x: string; y: string; cursor: string }[] = [
+  { id: "left", x: "0%", y: "50%", cursor: "ew-resize" },
+  { id: "right", x: "100%", y: "50%", cursor: "ew-resize" },
+];
+
 function findTrackForClip(
   tracks: StudioTimelineTrackResponse[],
   clipId: number
@@ -115,6 +127,34 @@ function angleFromCenter(center: { x: number; y: number }, point: { x: number; y
 
 function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function canvasPointToRectLocal(
+  point: { x: number; y: number },
+  rect: MediaDrawRect
+): { x: number; y: number } {
+  const dx = point.x - rect.centerX;
+  const dy = point.y - rect.centerY;
+  const rad = (-rect.rotation * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return {
+    x: dx * cos - dy * sin,
+    y: dx * sin + dy * cos,
+  };
+}
+
+function rectLocalToCanvasPoint(
+  local: { x: number; y: number },
+  rect: MediaDrawRect
+): { x: number; y: number } {
+  const rad = (rect.rotation * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return {
+    x: rect.centerX + local.x * cos - local.y * sin,
+    y: rect.centerY + local.x * sin + local.y * cos,
+  };
 }
 
 export default function StudioClipTransformOverlay({
@@ -309,7 +349,9 @@ export default function StudioClipTransformOverlay({
       e: React.PointerEvent<HTMLDivElement>,
       mode: DragMode,
       canvasPoint: { x: number; y: number },
-      center: { x: number; y: number }
+      center: { x: number; y: number },
+      startRect: MediaDrawRect,
+      side?: ResizeSide
     ) => {
       if (!effectiveTransform) return;
       e.preventDefault();
@@ -318,9 +360,11 @@ export default function StudioClipTransformOverlay({
 
       dragRef.current = {
         mode,
+        side,
         pointerId: e.pointerId,
         startPointer: canvasPoint,
         startTransform: { ...effectiveTransform },
+        startRect,
         startCenter: { ...center },
         startDist: Math.max(dist(center, canvasPoint), 1),
         startAngle: angleFromCenter(center, canvasPoint) - effectiveTransform.rotation,
@@ -349,9 +393,19 @@ export default function StudioClipTransformOverlay({
 
       const target = e.target as HTMLElement;
       const handle = target.dataset.handle;
+      const side =
+        target.dataset.side === "left" || target.dataset.side === "right"
+          ? target.dataset.side
+          : undefined;
       const center = { x: mediaRect.centerX, y: mediaRect.centerY };
       const mode: DragMode =
-        handle === "rotate" ? "rotate" : handle === "scale" ? "scale" : "move";
+        handle === "rotate"
+          ? "rotate"
+          : handle === "scale"
+            ? "scale"
+            : handle === "resize-x"
+              ? "resize-x"
+              : "move";
 
       if (
         isPlaceholder &&
@@ -381,7 +435,7 @@ export default function StudioClipTransformOverlay({
       }
 
       pausePlayback();
-      beginDrag(e, mode, canvasPoint, center);
+      beginDrag(e, mode, canvasPoint, center, mediaRect, side);
     },
     [
       displayRect,
@@ -416,6 +470,29 @@ export default function StudioClipTransformOverlay({
           ...next,
           scale: drag.startTransform.scale * (d / drag.startDist),
         });
+      } else if (drag.mode === "resize-x" && drag.startRect && drag.side) {
+        const localPointer = canvasPointToRectLocal(canvasPoint, drag.startRect);
+        const anchorX =
+          drag.side === "right" ? -drag.startRect.width / 2 : drag.startRect.width / 2;
+        const rawHandleX =
+          drag.side === "right"
+            ? Math.max(localPointer.x, anchorX + MIN_RESIZE_WIDTH)
+            : Math.min(localPointer.x, anchorX - MIN_RESIZE_WIDTH);
+        const nextWidth = Math.abs(rawHandleX - anchorX);
+        const centerLocalX = (rawHandleX + anchorX) / 2;
+        const nextCenter = rectLocalToCanvasPoint(
+          { x: centerLocalX, y: 0 },
+          drag.startRect
+        );
+
+        next = normalizeTransform({
+          ...next,
+          x: nextCenter.x - canvasSize.width / 2,
+          y: nextCenter.y - canvasSize.height / 2,
+          scaleX:
+            (drag.startTransform.scaleX ?? 1) *
+            (nextWidth / Math.max(drag.startRect.width, 1)),
+        });
       } else if (drag.mode === "rotate") {
         next = {
           ...next,
@@ -427,7 +504,7 @@ export default function StudioClipTransformOverlay({
       draftRef.current = normalized;
       onDraftChange(normalized);
     },
-    [onDraftChange]
+    [canvasSize, onDraftChange]
   );
 
   const handlePointerMove = useCallback(
@@ -626,6 +703,17 @@ function MotionLayer({
               aria-label={corner.id}
               className="pointer-events-auto absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer border-2 border-primary bg-background shadow-md"
               style={{ left: corner.x, top: corner.y, cursor: corner.cursor }}
+            />
+          ))}
+          {SIDE_HANDLES.map((handle) => (
+            <button
+              key={handle.id}
+              type="button"
+              data-handle="resize-x"
+              data-side={handle.id}
+              aria-label={handle.id}
+              className="pointer-events-auto absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer border-2 border-primary bg-background shadow-md"
+              style={{ left: handle.x, top: handle.y, cursor: handle.cursor }}
             />
           ))}
           <button

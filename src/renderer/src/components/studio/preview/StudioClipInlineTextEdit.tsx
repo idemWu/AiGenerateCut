@@ -27,6 +27,7 @@ import {
   getClipTextContent,
   isPlaceholderClip,
 } from "@/lib/studio/studioClipUtils";
+import { layoutTextLines } from "@/lib/studio/composition/textClipLayout";
 
 interface ScreenLayout {
   centerX: number;
@@ -37,6 +38,8 @@ interface ScreenLayout {
   fontSize: number;
   lineHeight: number;
 }
+
+const TEXT_EDIT_FONT_FAMILY = "Inter, PingFang SC, Microsoft YaHei, sans-serif";
 
 export interface StudioClipInlineTextEditHandle {
   startEditing: () => void;
@@ -251,43 +254,72 @@ const StudioClipInlineTextEdit = forwardRef<
     saveAndClose(draftText ?? "");
   }, [editing, selectedClip, draftText, saveAndClose]);
 
-  if (!canInteract || !activeLayout || !editing) return null;
+  const displayValue = selectedClip ? (draftText ?? getClipTextContent(selectedClip) ?? "") : "";
+  const editTextMetrics = useMemo(() => {
+    if (!activeLayout) {
+      return {
+        lineCount: 1,
+        height: 16,
+      };
+    }
 
-  const displayValue = draftText ?? getClipTextContent(selectedClip!) ?? "";
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!ctx) {
+      const lineCount = Math.max(displayValue.split("\n").length, 1);
+      return {
+        lineCount,
+        height: lineCount * activeLayout.lineHeight,
+      };
+    }
+
+    ctx.font = `600 ${activeLayout.fontSize}px ${TEXT_EDIT_FONT_FAMILY}`;
+    const lineCount = Math.max(
+      layoutTextLines(ctx, displayValue, activeLayout.width * 0.95).length,
+      1
+    );
+    return {
+      lineCount,
+      height: lineCount * activeLayout.lineHeight,
+    };
+  }, [activeLayout, canvasRef, displayValue]);
+
+  if (!canInteract || !activeLayout || !editing) return null;
 
   return (
     <div
       className="fixed z-30 box-border flex cursor-text items-center justify-center border-2 border-primary bg-black/80"
-        style={{
-          left: activeLayout.centerX,
-          top: activeLayout.centerY,
-          width: activeLayout.width,
-          height: activeLayout.height,
-          transform: `translate(-50%, -50%) rotate(${activeLayout.rotation}deg)`,
+      style={{
+        left: activeLayout.centerX,
+        top: activeLayout.centerY,
+        width: activeLayout.width,
+        height: activeLayout.height,
+        transform: `translate(-50%, -50%) rotate(${activeLayout.rotation}deg)`,
+      }}
+    >
+      <textarea
+        ref={textareaRef}
+        value={displayValue}
+        onChange={(e) => onDraftTextChange(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            onDraftTextChange(null);
+            setEditing(false);
+            onEditingChange(false);
+            frozenLayoutRef.current = null;
+          }
         }}
-      >
-        <textarea
-          ref={textareaRef}
-          value={displayValue}
-          onChange={(e) => onDraftTextChange(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.preventDefault();
-              onDraftTextChange(null);
-              setEditing(false);
-              onEditingChange(false);
-              frozenLayoutRef.current = null;
-            }
-          }}
-          rows={1}
-          className="m-0 max-h-full w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-center font-semibold text-white outline-none"
-          style={{
-            fontSize: activeLayout.fontSize,
-            lineHeight: `${activeLayout.lineHeight}px`,
-            fontFamily: "Inter, PingFang SC, Microsoft YaHei, sans-serif",
-          }}
-        />
+        rows={editTextMetrics.lineCount}
+        className="m-0 block w-[95%] resize-none overflow-hidden border-0 bg-transparent p-0 text-center font-semibold text-white outline-none"
+        style={{
+          height: editTextMetrics.height,
+          fontSize: activeLayout.fontSize,
+          lineHeight: `${activeLayout.lineHeight}px`,
+          fontFamily: TEXT_EDIT_FONT_FAMILY,
+        }}
+      />
     </div>
   );
 });

@@ -8,6 +8,8 @@ export interface StudioClipTransform {
   y: number;
   scale: number;
   rotation: number;
+  scaleX?: number;
+  scaleY?: number;
 }
 
 export interface SourceSize {
@@ -55,25 +57,41 @@ export function readClipTransform(clip: StudioClipResponse): StudioClipTransform
     y: typeof t.y === "number" ? t.y : 0,
     scale: typeof t.scale === "number" ? t.scale : 1,
     rotation: typeof t.rotation === "number" ? t.rotation : 0,
+    scaleX: typeof t.scaleX === "number" ? t.scaleX : undefined,
+    scaleY: typeof t.scaleY === "number" ? t.scaleY : undefined,
   });
 }
 
 export function normalizeTransform(partial: Partial<StudioClipTransform>): StudioClipTransform {
-  return {
+  const normalized: StudioClipTransform = {
     x: partial.x ?? 0,
     y: partial.y ?? 0,
     scale: Math.max(0.05, partial.scale ?? 1),
     rotation: partial.rotation ?? 0,
   };
+  if (partial.scaleX !== undefined) {
+    normalized.scaleX = Math.max(0.05, partial.scaleX);
+  }
+  if (partial.scaleY !== undefined) {
+    normalized.scaleY = Math.max(0.05, partial.scaleY);
+  }
+  return normalized;
 }
 
 export function transformToPayload(t: StudioClipTransform): StudioClipTransform {
-  return {
+  const payload: StudioClipTransform = {
     x: Math.round(t.x * 1000) / 1000,
     y: Math.round(t.y * 1000) / 1000,
     scale: Math.round(t.scale * 1000) / 1000,
     rotation: Math.round(t.rotation * 1000) / 1000,
   };
+  if (t.scaleX !== undefined) {
+    payload.scaleX = Math.round(t.scaleX * 1000) / 1000;
+  }
+  if (t.scaleY !== undefined) {
+    payload.scaleY = Math.round(t.scaleY * 1000) / 1000;
+  }
+  return payload;
 }
 
 /** API / clip 对象上的 transform 字段 */
@@ -109,9 +127,11 @@ export function computeMediaDrawRect(
   }
 
   const scale = transform.scale;
+  const scaleX = transform.scaleX ?? 1;
+  const scaleY = transform.scaleY ?? 1;
   const fitScale = Math.min(canvasSize.width / sw, canvasSize.height / sh) * scale;
-  const width = sw * fitScale;
-  const height = sh * fitScale;
+  const width = sw * fitScale * scaleX;
+  const height = sh * fitScale * scaleY;
   const x = transform.x + (canvasSize.width - width) / 2;
   const y = transform.y + (canvasSize.height - height) / 2;
 
