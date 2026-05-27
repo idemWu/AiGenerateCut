@@ -33,6 +33,7 @@ const VIDEO_EXTRA_REFERENCES_ENABLED = false;
 interface StudioAiReferenceStripProps {
   operationType: StudioAiOperationType;
   videoMode: StudioVideoMode;
+  modelId: string;
   references: StudioAiReference[];
   onReferencesChange: (refs: StudioAiReference[]) => void;
   /** 由父级 ComposerCard 控制整行高亮时可为 false，strip 自身仍处理 drop */
@@ -44,6 +45,7 @@ type ReferencePayload = Parameters<typeof referenceFromSource>[0];
 interface IngestContext {
   operationType: StudioAiOperationType;
   videoMode: StudioVideoMode;
+  modelId: string;
   references: StudioAiReference[];
   onReferencesChange: (refs: StudioAiReference[]) => void;
 }
@@ -60,12 +62,13 @@ function runIngest(
     payload,
     operationType: ctx.operationType,
     videoMode: ctx.videoMode,
+    modelId: ctx.modelId,
     references: ctx.references,
     onReferencesChange: ctx.onReferencesChange,
     targetSlotId,
   });
   if (!result.success) {
-    toast.error(t("studioAiDropWrongType"));
+    toast.error(t(result.errorKey));
     return false;
   }
   return true;
@@ -74,6 +77,7 @@ function runIngest(
 export default function StudioAiReferenceStrip({
   operationType,
   videoMode,
+  modelId,
   references,
   onReferencesChange,
   showDragHighlight = true,
@@ -84,6 +88,7 @@ export default function StudioAiReferenceStrip({
   const ingestCtx: IngestContext = {
     operationType,
     videoMode,
+    modelId,
     references,
     onReferencesChange,
   };
@@ -121,7 +126,11 @@ export default function StudioAiReferenceStrip({
           onAdd={(payload) => {
             const next = referenceFromSource(payload);
             onReferencesChange(
-              upsertReferenceForSlot(references, next, { operationType, videoMode })
+              upsertReferenceForSlot(references, next, {
+                operationType,
+                videoMode,
+                modelId,
+              })
             );
           }}
           onRemove={(id) => onReferencesChange(removeReference(references, id))}
@@ -170,21 +179,32 @@ function VideoReferenceStrip({
   videoMode: StudioVideoMode;
   t: (key: TranslationKey) => string;
 }) {
-  const slots = getVideoSlotsForMode(videoMode);
+  const slots = getVideoSlotsForMode(videoMode, ingestCtx.modelId);
 
   return (
     <div className="flex max-w-[88px] flex-col gap-1.5 sm:max-w-none">
       {slots.length > 0 ? (
         <div className="flex items-start gap-1.5 overflow-x-auto pb-0.5">
           {slots.map((slot) => (
-            <SlotCell
-              key={slot.slotId}
-              slot={slot}
-              reference={getReferenceForSlot(ingestCtx.references, slot)}
-              ingestCtx={ingestCtx}
-              videoMode={videoMode}
-              t={t}
-            />
+            slot.multiple ? (
+              <MultiSlotCell
+                key={slot.slotId}
+                slot={slot}
+                references={ingestCtx.references.filter((r) => r.inputRole === slot.inputRole)}
+                ingestCtx={ingestCtx}
+                videoMode={videoMode}
+                t={t}
+              />
+            ) : (
+              <SlotCell
+                key={slot.slotId}
+                slot={slot}
+                reference={getReferenceForSlot(ingestCtx.references, slot)}
+                ingestCtx={ingestCtx}
+                videoMode={videoMode}
+                t={t}
+              />
+            )
           ))}
         </div>
       ) : null}
@@ -363,6 +383,71 @@ function ExtraVideoSlot({
   );
 }
 
+function MultiSlotCell({
+  slot,
+  references,
+  ingestCtx,
+  videoMode,
+  t,
+}: {
+  slot: StudioVideoSlotDef;
+  references: StudioAiReference[];
+  ingestCtx: IngestContext;
+  videoMode: StudioVideoMode;
+  t: (key: TranslationKey) => string;
+}) {
+  const { references: allReferences, onReferencesChange } = ingestCtx;
+  const label = getSlotShortLabel(slot.slotId, t);
+  const isFull = slot.maxCount != null && references.length >= slot.maxCount;
+
+  const handleAdd = (payload: ReferencePayload) => {
+    if (isFull) {
+      toast.error(t("studioAiReferenceLimitReached"));
+      return;
+    }
+    const next = referenceFromSource({
+      ...payload,
+      inputParams: slot.allowKeepSound ? { keep_original_sound: false } : undefined,
+    });
+    onReferencesChange(
+      upsertReferenceForSlot(allReferences, next, {
+        operationType: "video",
+        videoMode,
+        modelId: ingestCtx.modelId,
+        slotId: slot.slotId,
+      })
+    );
+  };
+
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-0.5">
+      <span className="max-w-[72px] truncate text-[9px] text-muted-foreground">
+        {slot.maxCount != null ? `${label} ${references.length}/${slot.maxCount}` : label}
+      </span>
+      <div className="flex items-start gap-1">
+        {!isFull ? (
+          <AddReferenceCell
+            acceptMedia={slot.mediaType}
+            onAdd={handleAdd}
+            onDragIngest={(p) => runIngest(ingestCtx, p, t, slot.slotId)}
+            optional={slot.optional}
+          />
+        ) : null}
+        {[...references]
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((ref) => (
+            <ThumbCell
+              key={ref.id}
+              reference={ref}
+              onRemove={() => onReferencesChange(removeReference(allReferences, ref.id))}
+              showKeepSound={slot.allowKeepSound}
+            />
+          ))}
+      </div>
+    </div>
+  );
+}
+
 function SlotCell({
   slot,
   reference,
@@ -388,6 +473,7 @@ function SlotCell({
       upsertReferenceForSlot(references, next, {
         operationType: "video",
         videoMode,
+        modelId: ingestCtx.modelId,
         slotId: slot.slotId,
       })
     );
@@ -452,9 +538,9 @@ function AddReferenceCell({
     }
     setUploading(true);
     try {
-      const { objectKey, mediaType } = await uploadStudioAiReferenceFile(file);
+      const { objectKey, mediaType, resourceId } = await uploadStudioAiReferenceFile(file);
       onAdd({
-        source: { kind: "upload", objectKey, mediaType },
+        source: { kind: "upload", objectKey, mediaType, resourceId },
         label: file.name,
         thumbUrl: mediaType === "image" ? objectKey : null,
         inputRole: "image",
@@ -599,6 +685,8 @@ function getSlotShortLabel(slotId: string, t: (key: TranslationKey) => string): 
   const map: Record<string, string> = {
     first_frame: t("studioAiSlotShortFirst"),
     last_frame: t("studioAiSlotShortLast"),
+    image: t("studioAiTypeImage"),
+    reference: t("studioAiSlotShortRefer"),
     refer: t("studioAiSlotShortRefer"),
     refer_optional: t("studioAiSlotShortRefer"),
     feature: t("studioAiSlotShortFeature"),

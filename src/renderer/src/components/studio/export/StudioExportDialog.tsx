@@ -4,8 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { Download, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
-import type { StudioTimelineTrackResponse } from "@/lib/api/studio";
-import type { components } from "@/lib/api/schema";
+import type { StudioAspectRatio, StudioTimelineTrackResponse } from "@/lib/api/studio";
 import { useRequireLogin } from "@/lib/hooks/useRequireLogin";
 import { buildStudioExportFilename } from "@/lib/studio/export/buildExportFilename";
 import {
@@ -13,8 +12,6 @@ import {
   isStudioExportSupported,
   type ExportProgress,
 } from "@/lib/studio/export/exportTimelineMp4";
-
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
 
 interface StudioExportDialogProps {
   open: boolean;
@@ -26,7 +23,7 @@ interface StudioExportDialogProps {
   projectTitle: string;
 }
 
-// 各 phase 在全局进度条上的区间。WebCodecs 无 loadWasm 阶段。
+// 各 phase 在全局进度条上的区间。三条导出路径各有不同。
 const PHASE_RANGES_WEBCODECS = {
   prepare: [0, 10],
   encode: [10, 95],
@@ -40,13 +37,27 @@ const PHASE_RANGES_FFMPEG = {
   mux: [70, 100],
 } as const;
 
+const PHASE_RANGES_NATIVE = {
+  prepare: [0, 10],
+  encode: [10, 75],
+  mux: [75, 100],
+} as const;
+
 function phaseToGlobalPct(p: ExportProgress): number {
-  const ranges = p.compatMode ? PHASE_RANGES_FFMPEG : PHASE_RANGES_WEBCODECS;
+  const ranges = p.nativeMode
+    ? PHASE_RANGES_NATIVE
+    : p.compatMode
+      ? PHASE_RANGES_FFMPEG
+      : PHASE_RANGES_WEBCODECS;
   const range = (ranges as Record<string, readonly [number, number]>)[p.phase];
   if (!range) return 0;
   const [lo, hi] = range;
   const clamped = Math.max(0, Math.min(1, p.progress));
   return lo + (hi - lo) * clamped;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 export default function StudioExportDialog({
@@ -94,11 +105,13 @@ export default function StudioExportDialog({
         setDisplayPct(0);
         const ac = new AbortController();
         abortRef.current = ac;
+        const defaultFilename = buildStudioExportFilename(projectTitle || "studio");
         try {
-          const blob = await exportTimelineMp4({
+          const result = await exportTimelineMp4({
             tracks,
             durationSec: contentEndSec,
             aspectRatio,
+            defaultFilename,
             onProgress: (p) => {
               if (p.compatMode) setCompatMode(true);
               setProgress(p);
@@ -108,13 +121,20 @@ export default function StudioExportDialog({
             signal: ac.signal,
           });
           setDisplayPct(100);
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = buildStudioExportFilename(projectTitle || "studio");
-          a.click();
-          URL.revokeObjectURL(url);
-          toast.success(t("studioExportSuccess"));
+          if (result.kind === "file") {
+            const message = t("studioExportSavedTo").replace("{path}", result.outputPath);
+            toast.success(message);
+            // Native 保存完成后稍作停留，让用户能看到进度条到达 100%，避免观感停在 75%。
+            await delay(300);
+          } else {
+            const url = URL.createObjectURL(result.blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = defaultFilename;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success(t("studioExportSuccess"));
+          }
           onClose();
         } catch (e) {
           if (e instanceof DOMException && e.name === "AbortError") {

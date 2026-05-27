@@ -6,15 +6,13 @@ import StudioClipPropertiesPanel from "@/components/studio/resources/StudioClipP
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type {
   StudioAiModelListResponse,
+  StudioAspectRatio,
   StudioClipResponse,
   StudioKeyframeResponse,
 } from "@/lib/api/studio";
 import { setStudioAiDragData } from "@/lib/studio/ai/studioAiDrag";
 import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
-import type { components } from "@/lib/api/schema";
 import type { StudioPanelPlacement } from "@/lib/studio/studioEditorLayout";
-
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
 export type StudioResourceTab = "keyframes" | "assets" | "properties";
 
 interface StudioRightPanelProps {
@@ -105,7 +103,11 @@ export default function StudioRightPanel({
                   label={`KF #${kf.id}`}
                   onDragStart={(e) => {
                     setStudioAiDragData(e.dataTransfer, {
-                      source: { kind: "keyframe", id: kf.id },
+                      source: {
+                        kind: "keyframe",
+                        id: kf.id,
+                        resourceId: kf.resource_id,
+                      },
                       label: `KF #${kf.id}`,
                       thumbUrl: kf.image_url,
                     });

@@ -1,6 +1,4 @@
-import type { components } from "@/lib/api/schema";
-
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
+import type { StudioAspectRatio } from "@/lib/api/studio";
 
 export interface CanvasSize {
   width: number;
@@ -18,6 +16,7 @@ const RATIO_MAP: Record<StudioAspectRatio, number> = {
   "3:2": 3 / 2,
   "2:3": 2 / 3,
   "21:9": 21 / 9,
+  adaptive: 16 / 9,
 };
 
 export function aspectRatioToCanvasSize(aspectRatio: StudioAspectRatio): CanvasSize {

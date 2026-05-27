@@ -1,13 +1,11 @@
 import type {
   CreateStudioAssetGenerationRequest,
   CreateStudioAssetRequest,
+  StudioAspectRatio,
   StudioAssetType,
+  StudioImageSize,
 } from "@/lib/api/studio";
-import type { components } from "@/lib/api/schema";
 import type { StudioAiModelInfo } from "@/lib/studio/studioAiModels";
-
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
-type StudioImageSize = components["schemas"]["StudioImageSize"];
 
 export type AssetFormTab = "ai" | "upload" | "empty";
 

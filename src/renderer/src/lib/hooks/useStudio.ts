@@ -64,6 +64,16 @@ export function useStudioWorkflows(projectId: number | null, options?: { enabled
   return { workflows: asArray(data), isLoading, isError: !!error, mutate };
 }
 
+export function useStudioSessions(projectId: number | null, options?: { enabled?: boolean }) {
+  const result = useStudioWorkflows(projectId, options);
+  return {
+    sessions: result.workflows,
+    isLoading: result.isLoading,
+    isError: result.isError,
+    mutate: result.mutate,
+  };
+}
+
 export function useStudioWorkflowNodes(
   projectId: number | null,
   workflowId: number | null,
@@ -78,6 +88,14 @@ export function useStudioWorkflowNodes(
     { dedupingInterval: 2000, revalidateOnFocus: false }
   );
   return { nodes: asArray(data), isLoading, isError: !!error, mutate };
+}
+
+export function useStudioSessionNodes(
+  projectId: number | null,
+  sessionId: number | null,
+  options?: { enabled?: boolean }
+) {
+  return useStudioWorkflowNodes(projectId, sessionId, options);
 }
 
 export function useStudioKeyframes(projectId: number | null, options?: { enabled?: boolean }) {

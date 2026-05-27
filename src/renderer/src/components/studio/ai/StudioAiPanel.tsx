@@ -9,6 +9,7 @@ import type {
   StudioAspectRatio,
   StudioImageSize,
   StudioVideoMode,
+  StudioVideoProviderQuality,
 } from "@/lib/studio/studioAiResources";
 import type { StudioAiContextMode } from "@/lib/studio/studioClipUtils";
 import type { PendingNodeInputThumb } from "@/lib/studio/ai/buildPendingNodeInputThumbs";
@@ -47,6 +48,8 @@ interface StudioAiPanelProps {
   onVideoAspectRatioChange: (value: StudioAspectRatio) => void;
   videoDurationSec: number;
   onVideoDurationSecChange: (value: number) => void;
+  videoQuality: StudioVideoProviderQuality;
+  onVideoQualityChange: (value: StudioVideoProviderQuality) => void;
   hasVideoInput: boolean;
   onSubmit: () => void;
   onCreateClip: () => void;
@@ -88,6 +91,8 @@ export default function StudioAiPanel({
   onVideoAspectRatioChange,
   videoDurationSec,
   onVideoDurationSecChange,
+  videoQuality,
+  onVideoQualityChange,
   hasVideoInput,
   onSubmit,
   onCreateClip,
@@ -189,6 +194,8 @@ export default function StudioAiPanel({
             onVideoAspectRatioChange={onVideoAspectRatioChange}
             videoDurationSec={videoDurationSec}
             onVideoDurationSecChange={onVideoDurationSecChange}
+            videoQuality={videoQuality}
+            onVideoQualityChange={onVideoQualityChange}
             hasVideoInput={hasVideoInput}
             onSubmit={onSubmit}
           />

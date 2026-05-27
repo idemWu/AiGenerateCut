@@ -13,7 +13,9 @@ import {
   upsertReferenceForSlot,
 } from "@/lib/studio/studioAiResources";
 
-export type IngestDragErrorKey = "studioAiDropWrongType";
+export type IngestDragErrorKey =
+  | "studioAiDropWrongType"
+  | "studioAiReferenceLimitReached";
 
 export type IngestDragResult =
   | { success: true }
@@ -23,6 +25,7 @@ export interface IngestDragPayloadToReferencesParams {
   payload: StudioAiDragPayload | null;
   operationType: StudioAiOperationType;
   videoMode: StudioVideoMode;
+  modelId?: string | null;
   references: StudioAiReference[];
   onReferencesChange: (refs: StudioAiReference[]) => void;
   targetSlotId?: string;
@@ -49,6 +52,9 @@ function findTargetVideoSlot(
   if (targetSlotId) {
     return slots.find((s) => s.slotId === targetSlotId);
   }
+
+  const multipleSlot = slots.find((s) => s.multiple);
+  if (multipleSlot) return multipleSlot;
 
   const emptyRequired = slots.find(
     (s) => !s.optional && !getReferenceForSlot(references, s)
@@ -110,6 +116,7 @@ export function ingestDragPayloadToReferences(
     payload,
     operationType,
     videoMode,
+    modelId,
     references,
     onReferencesChange,
     targetSlotId,
@@ -133,7 +140,7 @@ export function ingestDragPayloadToReferences(
       sortOrder: references.filter((r) => r.inputRole === "image").length,
     });
     onReferencesChange(
-      upsertReferenceForSlot(references, next, { operationType, videoMode })
+      upsertReferenceForSlot(references, next, { operationType, videoMode, modelId })
     );
     return { success: true };
   }
@@ -143,7 +150,7 @@ export function ingestDragPayloadToReferences(
     return ingestExtraReference(params, extraKindFromTarget, mediaType);
   }
 
-  const slots = getVideoSlotsForMode(videoMode);
+  const slots = getVideoSlotsForMode(videoMode, modelId);
 
   if (slots.length === 0) {
     const kind = resolveExtraKindForDrop(mediaType, targetSlotId);
@@ -166,6 +173,13 @@ export function ingestDragPayloadToReferences(
     return { success: false, errorKey: "studioAiDropWrongType" };
   }
 
+  if (slot.maxCount != null) {
+    const slotRefs = references.filter((r) => r.inputRole === slot.inputRole);
+    if (slotRefs.length >= slot.maxCount) {
+      return { success: false, errorKey: "studioAiReferenceLimitReached" };
+    }
+  }
+
   const next = referenceFromSource({
     source: payload.source,
     label: payload.label,
@@ -179,6 +193,7 @@ export function ingestDragPayloadToReferences(
     upsertReferenceForSlot(references, next, {
       operationType,
       videoMode,
+      modelId,
       slotId: slot.slotId,
     })
   );

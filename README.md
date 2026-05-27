@@ -32,3 +32,7 @@ $ npm run build:mac
 # For Linux
 $ npm run build:linux
 ```
+
+更改 schema.ts 
+npx openapi-typescript https://dev-api.m-utopia.com/openapi.json --output ./src/renderer/src/lib/api/schema.ts
+

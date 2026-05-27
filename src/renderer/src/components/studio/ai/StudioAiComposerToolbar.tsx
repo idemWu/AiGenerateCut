@@ -13,8 +13,15 @@ import type {
   StudioAspectRatio,
   StudioImageSize,
   StudioVideoMode,
+  StudioVideoProviderQuality,
 } from "@/lib/studio/studioAiResources";
-import { clampVideoDuration } from "@/lib/studio/studioAiResources";
+import {
+  clampVideoProviderQuality,
+  clampVideoDuration,
+  getVideoProviderQualityOptions,
+  isKelingV3OmniVideoGenerationModel,
+  isSeedanceVideoGenerationModel,
+} from "@/lib/studio/studioAiResources";
 import StudioAiPillSelect, {
   type StudioAiPillSelectOption,
 } from "@/components/studio/ai/StudioAiPillSelect";
@@ -38,10 +45,12 @@ interface StudioAiComposerToolbarProps {
   onVideoAspectRatioChange: (value: StudioAspectRatio) => void;
   videoDurationSec: number;
   onVideoDurationSecChange: (value: number) => void;
+  videoQuality: StudioVideoProviderQuality;
+  onVideoQualityChange: (value: StudioVideoProviderQuality) => void;
   hasVideoInput: boolean;
 }
 
-const VIDEO_ASPECTS: StudioAspectRatio[] = ["1:1", "16:9", "9:16"];
+const VIDEO_ASPECTS: StudioAspectRatio[] = ["1:1", "16:9", "9:16", "adaptive"];
 
 export default function StudioAiComposerToolbar({
   operationType,
@@ -62,6 +71,8 @@ export default function StudioAiComposerToolbar({
   onVideoAspectRatioChange,
   videoDurationSec,
   onVideoDurationSecChange,
+  videoQuality,
+  onVideoQualityChange,
   hasVideoInput,
 }: StudioAiComposerToolbarProps) {
   const { t } = useLanguage();
@@ -89,14 +100,16 @@ export default function StudioAiComposerToolbar({
     [typeModels]
   );
 
-  const videoModeOptions: StudioAiPillSelectOption[] = useMemo(
-    () => [
+  const videoModeOptions: StudioAiPillSelectOption[] = useMemo(() => {
+    const options: StudioAiPillSelectOption[] = [
       { value: "text2video", label: t("studioAiVideoModeText2Video") },
-      { value: "first_frame", label: t("studioAiVideoModeImage2Video") },
-      { value: "first_last_frame", label: t("studioAiVideoModeFirstLast") },
-    ],
-    [t]
-  );
+    ];
+    if (isKelingV3OmniVideoGenerationModel(modelId)) {
+      options.push({ value: "first_frame", label: t("studioAiVideoModeOmni") });
+    }
+    options.push({ value: "first_last_frame", label: t("studioAiVideoModeFirstLast") });
+    return options;
+  }, [modelId, t]);
 
   const imageAspectOptions: StudioAiPillSelectOption[] = useMemo(() => {
     const aspects = currentModel?.supported_aspect_ratios ?? [
@@ -131,13 +144,21 @@ export default function StudioAiComposerToolbar({
   );
 
   const durationOptions: StudioAiPillSelectOption[] = useMemo(() => {
+    const min = isSeedanceVideoGenerationModel(modelId) ? 4 : 3;
     const max = hasVideoInput ? 10 : 15;
     const opts: StudioAiPillSelectOption[] = [];
-    for (let d = 3; d <= max; d += 1) {
+    for (let d = min; d <= max; d += 1) {
       opts.push({ value: String(d), label: `${d}s` });
     }
     return opts;
-  }, [hasVideoInput]);
+  }, [hasVideoInput, modelId]);
+
+  const videoQualityOptions: StudioAiPillSelectOption[] = useMemo(
+    () => getVideoProviderQualityOptions(modelId),
+    [modelId]
+  );
+
+  const selectedVideoQuality = clampVideoProviderQuality(modelId, videoQuality);
 
   const typeIcon =
     operationType === "text" ? (
@@ -205,11 +226,17 @@ export default function StudioAiComposerToolbar({
               clampVideoDuration(
                 videoDurationSec,
                 hasVideoInput,
-                currentModel?.supported_durations
+                currentModel?.supported_durations,
+                modelId
               )
             )}
             onChange={(v) => onVideoDurationSecChange(Number(v))}
             options={durationOptions}
+          />
+          <StudioAiPillSelect
+            value={selectedVideoQuality}
+            onChange={(v) => onVideoQualityChange(v as StudioVideoProviderQuality)}
+            options={videoQualityOptions}
           />
         </>
       ) : null}

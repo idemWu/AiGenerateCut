@@ -11,12 +11,14 @@ import {
   deleteStudioTrack,
   updateStudioClip,
   type CreateStudioClipRequest,
+  type StudioAspectRatio,
+  type StudioClipMediaType,
   type StudioClipResponse,
   type StudioTimelineTrackResponse,
   type StudioUpdateClipRequest,
 } from "@/lib/api/studio";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import StudioTimelineToolbar from "./StudioTimelineToolbar";
+import StudioTimelineToolbar, { type TimelineSelectTool } from "./StudioTimelineToolbar";
 import StudioTrackLabelColumn from "./StudioTrackLabelColumn";
 import StudioClipContextMenu from "./StudioClipContextMenu";
 import StudioClipRenameDialog from "./StudioClipRenameDialog";
@@ -30,7 +32,6 @@ import {
 import { parseLocalAssetObjectKey } from "@/lib/studio/localAssets/localAssetUrl";
 import { useStudioEditorStore } from "@/lib/stores/studioEditorStore";
 import type { PlayheadSubscriber } from "@/lib/studio/playback/useStudioPlayback";
-import type { components } from "@/lib/api/schema";
 import {
   buildMajorRulerBands,
   buildTimeRulerTicks,
@@ -48,9 +49,6 @@ import {
   trackRowStride,
 } from "./timelineLayout";
 
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
-type StudioClipMediaType = components["schemas"]["StudioClipMediaType"];
-
 const MIN_SPLIT_SEGMENT_SEC = 0.1;
 
 interface ClipSplitInfo {
@@ -63,6 +61,11 @@ interface SplitTarget {
   clip: StudioClipResponse;
   trackId: number;
   splitInfo: ClipSplitInfo;
+}
+
+interface RazorPreview {
+  sec: number;
+  target: SplitTarget | null;
 }
 
 type ClipEditOperation = "trimLeft" | "split" | "trimRight";
@@ -94,7 +97,7 @@ interface StudioTimelineProps {
   onClipOptimisticMove?: (clipId: number, trackId: number, startSec: number) => Promise<unknown>;
   onTracksMutate: () => Promise<unknown>;
   onWorkflowsMutate: () => Promise<unknown>;
-  onClipCreated?: (clipId: number, workflowId: number, startSec: number) => void;
+  onClipCreated?: (clipId: number, workflowId: number | null, startSec: number) => void;
   capturingKeyframe: boolean;
   onCaptureKeyframe: () => void;
   requireLogin: (action: () => void) => void;
@@ -152,6 +155,8 @@ export default function StudioTimeline({
   const [uploading, setUploading] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
   const [selectedClipIds, setSelectedClipIds] = useState<number[]>([]);
+  const [activeTimelineTool, setActiveTimelineTool] = useState<TimelineSelectTool>("select");
+  const [razorPreview, setRazorPreview] = useState<RazorPreview | null>(null);
   const [activeClipEditOperation, setActiveClipEditOperation] =
     useState<ClipEditOperation | null>(null);
   const [missingLocalClipIds, setMissingLocalClipIds] = useState<Set<number>>(() => new Set());
@@ -292,6 +297,10 @@ export default function StudioTimeline({
   useEffect(() => {
     if (isPlaying) setSelectedClipIds([]);
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (activeTimelineTool !== "razor") setRazorPreview(null);
+  }, [activeTimelineTool]);
 
   const handleClipCommit = useCallback(
     async (clipId: number, trackId: number, startSec: number) => {
@@ -599,6 +608,31 @@ export default function StudioTimeline({
     setDeleteClipTarget(targetClips[0]!);
   }, [pausePlayback, selectedClip, selectedClips]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.defaultPrevented || e.repeat || e.key !== "Delete") return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (deleteClipTarget != null || renameTarget != null || confirmDeleteTrackOpen) return;
+      if (!isTimelineDeleteShortcutTarget(e.target)) return;
+
+      const hasClipSelection = selectedClips.length > 0 || selectedClip != null;
+      if (!hasClipSelection) return;
+
+      e.preventDefault();
+      handleDeleteSelectedClip();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [
+    confirmDeleteTrackOpen,
+    deleteClipTarget,
+    handleDeleteSelectedClip,
+    renameTarget,
+    selectedClip,
+    selectedClips.length,
+  ]);
+
   const handleSelectAllLeft = useCallback(() => {
     pausePlayback();
     setClipContextMenu(null);
@@ -682,14 +716,14 @@ export default function StudioTimeline({
     handleTrimClipAtPlayhead("right");
   }, [handleTrimClipAtPlayhead]);
 
-  const handleSplitClipAtPlayhead = useCallback(() => {
+  const handleSplitTarget = useCallback((target: SplitTarget | null) => {
     if (activeClipEditOperation != null) return;
-    if (!splitTargetAtPlayhead) {
+    if (!target) {
       toast.error(t("studioTimelineCutTooClose"));
       return;
     }
 
-    const { clip, trackId, splitInfo } = splitTargetAtPlayhead;
+    const { clip, trackId, splitInfo } = target;
     const { sec: splitSec, leftDurationSec, rightDurationSec } = splitInfo;
     const createRequest = buildSplitClipCreateRequest(clip, splitSec, rightDurationSec);
     if (!createRequest) {
@@ -766,9 +800,60 @@ export default function StudioTimeline({
     pausePlayback,
     projectId,
     requireLogin,
-    splitTargetAtPlayhead,
     t,
   ]);
+
+  const handleSplitClipAtPlayhead = useCallback(() => {
+    handleSplitTarget(splitTargetAtPlayhead);
+  }, [handleSplitTarget, splitTargetAtPlayhead]);
+
+  const resolveRazorTargetAtSec = useCallback(
+    (sec: number) =>
+      findSplitTargetAtSec({
+        selectedClipIds,
+        sortedTracks,
+        sec,
+      }),
+    [selectedClipIds, sortedTracks]
+  );
+
+  const updateRazorPreviewFromPointer = useCallback(
+    (clientX: number) => {
+      const sec = resolveSecFromEvent(clientX);
+      setRazorPreview({
+        sec,
+        target: resolveRazorTargetAtSec(sec),
+      });
+    },
+    [resolveRazorTargetAtSec, resolveSecFromEvent]
+  );
+
+  const handleRazorLayerPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      pausePlayback();
+      setClipContextMenu(null);
+
+      const sec = resolveSecFromEvent(e.clientX);
+      const target = resolveRazorTargetAtSec(sec);
+      setRazorPreview({ sec, target });
+      handleSplitTarget(target);
+    },
+    [handleSplitTarget, pausePlayback, resolveRazorTargetAtSec, resolveSecFromEvent]
+  );
+
+  const handleRazorLayerPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      updateRazorPreviewFromPointer(e.clientX);
+    },
+    [updateRazorPreviewFromPointer]
+  );
+
+  const handleRazorLayerPointerLeave = useCallback(() => {
+    setRazorPreview(null);
+  }, []);
 
   const handlePlayheadPointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -800,10 +885,7 @@ export default function StudioTimeline({
         setCreating(true);
         try {
           await createStudioClip(projectId, {
-            source_type: "empty",
-            media_type: "text",
             start_sec: playheadRef.current,
-            duration_sec: 5,
             title: t("studioTimelineCreateClip"),
           });
           await onTracksMutate();
@@ -857,7 +939,7 @@ export default function StudioTimeline({
             });
             await onTracksMutate();
             await onWorkflowsMutate();
-            onClipCreated?.(clip.id, clip.workflow_id, clip.start_sec);
+            onClipCreated?.(clip.id, clip.workflow_id ?? null, clip.start_sec);
             toast.success(t("studioTimelineUploadSuccess"));
           } catch (err) {
             const msg = err instanceof Error ? err.message : t("studioTimelineSaveFailed");
@@ -924,7 +1006,7 @@ export default function StudioTimeline({
                 : clip;
             await onTracksMutate();
             await onWorkflowsMutate();
-            onClipCreated?.(placedClip.id, placedClip.workflow_id, placedClip.start_sec);
+            onClipCreated?.(placedClip.id, placedClip.workflow_id ?? null, placedClip.start_sec);
             toast.success(t("studioTimelineLocalAssetSuccess"));
           } catch (err) {
             const msg = err instanceof Error ? err.message : t("studioTimelineSaveFailed");
@@ -981,6 +1063,8 @@ export default function StudioTimeline({
         selectedClipCount={selectedClipIds.length}
         onRenameClip={handleRenameSelectedClip}
         onDeleteClip={handleDeleteSelectedClip}
+        activeTimelineTool={activeTimelineTool}
+        onTimelineToolChange={setActiveTimelineTool}
         canEditClipAtPlayhead={splitTargetAtPlayhead != null}
         activeClipEditOperation={activeClipEditOperation}
         onTrimClipLeftAtPlayhead={handleTrimClipLeftAtPlayhead}
@@ -1047,6 +1131,23 @@ export default function StudioTimeline({
                 <div className="studio-playhead-line min-h-0 w-0.5 flex-1" />
               </div>
             </div>
+
+            {activeTimelineTool === "razor" ? (
+              <div
+                className="studio-razor-cursor absolute inset-0 z-[25]"
+                onPointerDown={handleRazorLayerPointerDown}
+                onPointerMove={handleRazorLayerPointerMove}
+                onPointerLeave={handleRazorLayerPointerLeave}
+              />
+            ) : null}
+
+            {razorPreview ? (
+              <RazorPreviewLine
+                preview={razorPreview}
+                pxPerSec={pxPerSec}
+                trackCount={sortedTracks.length}
+              />
+            ) : null}
 
             <TimeRulerRow ticks={ticks} bands={rulerBands} />
 
@@ -1250,6 +1351,14 @@ function toStudioClipMediaType(mediaType: string): StudioClipMediaType | null {
   return null;
 }
 
+function isTimelineDeleteShortcutTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return true;
+  if (target.closest("[data-clip-block]")) return true;
+  return !target.closest(
+    "input, textarea, select, button, [contenteditable='true'], [role='textbox']"
+  );
+}
+
 function buildSplitClipCreateRequest(
   clip: StudioClipResponse,
   startSec: number,
@@ -1267,27 +1376,25 @@ function buildSplitClipCreateRequest(
   if (clip.workflow_node_output_id != null) {
     return {
       ...base,
-      source_type: "node_output",
-      workflow_node_output_id: clip.workflow_node_output_id,
+      session_node_output_id: clip.workflow_node_output_id,
     };
   }
 
   if (clip.media_url && mediaType !== "text") {
     return {
       ...base,
-      source_type: "upload",
-      media_type: mediaType,
-      object_key: clip.media_url,
-      source_duration_sec: clip.source_duration_sec ?? null,
+      object_url: clip.media_url,
+      mime_type:
+        mediaType === "video"
+          ? "video/mp4"
+          : mediaType === "audio"
+            ? "audio/mpeg"
+            : "image/png",
       aspect_ratio: clip.aspect_ratio ?? null,
     };
   }
 
-  return {
-    ...base,
-    source_type: "empty",
-    media_type: mediaType,
-  };
+  return base;
 }
 
 function TimeRulerRow({
@@ -1331,6 +1438,41 @@ function TimeRulerRow({
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+function RazorPreviewLine({
+  preview,
+  pxPerSec,
+  trackCount,
+}: {
+  preview: RazorPreview;
+  pxPerSec: number;
+  trackCount: number;
+}) {
+  const height = Math.max(0, trackCount * trackRowStride() - TRACK_GAP);
+
+  return (
+    <div
+      className={
+        "pointer-events-none absolute z-[26] -translate-x-1/2 border-l " +
+        (preview.target
+          ? "border-accent/80 border-dashed"
+          : "border-destructive/70 border-dashed")
+      }
+      style={{
+        top: RULER_HEIGHT,
+        left: preview.sec * pxPerSec,
+        height,
+      }}
+    >
+      <div
+        className={
+          "absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full " +
+          (preview.target ? "bg-accent shadow-[0_0_10px_var(--color-accent)]" : "bg-destructive")
+        }
+      />
     </div>
   );
 }

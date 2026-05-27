@@ -6,6 +6,19 @@ import { pollStudioNode } from "@/lib/studio/pollNode";
 
 const NON_TERMINAL = new Set(["pending", "processing"]);
 
+function pollTimingForNode(node: StudioWorkflowNodeResponse): {
+  intervalMs: number;
+  maxWaitMs: number;
+} {
+  if (node.operation_type === "video") {
+    return { intervalMs: 4000, maxWaitMs: 300_000 };
+  }
+  if (node.operation_type === "image") {
+    return { intervalMs: 2000, maxWaitMs: 120_000 };
+  }
+  return { intervalMs: 2500, maxWaitMs: 120_000 };
+}
+
 export interface RunStudioGenerationAfterCreateParams {
   projectId: number;
   workflowId: number;
@@ -64,10 +77,12 @@ export function runStudioGenerationAfterCreate(
     try {
       let current = node;
       if (NON_TERMINAL.has(current.status)) {
+        const timing = pollTimingForNode(current);
         current = await pollStudioNode({
           projectId,
           workflowId,
           nodeId: current.id,
+          ...timing,
           onUpdate: () => void refreshNodes(),
         });
       }

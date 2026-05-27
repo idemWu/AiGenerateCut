@@ -7,6 +7,7 @@ import type {
   StudioAspectRatio,
   StudioImageSize,
   StudioVideoMode,
+  StudioVideoProviderQuality,
 } from "@/lib/studio/studioAiResources";
 import StudioAiComposerCard from "./StudioAiComposerCard";
 
@@ -33,6 +34,8 @@ interface StudioAiComposerProps {
   onVideoAspectRatioChange: (value: StudioAspectRatio) => void;
   videoDurationSec: number;
   onVideoDurationSecChange: (value: number) => void;
+  videoQuality: StudioVideoProviderQuality;
+  onVideoQualityChange: (value: StudioVideoProviderQuality) => void;
   hasVideoInput: boolean;
   onSubmit: () => void;
 }

@@ -4,6 +4,7 @@ import { measureTextClipSourceSize, TEXT_CLIP_FONT } from "./textClipLayout";
 import type { CanvasSize } from "./aspectRatioSize";
 
 export interface StudioClipTransform {
+  [key: string]: unknown;
   x: number;
   y: number;
   scale: number;
@@ -98,9 +99,7 @@ export function transformToPayload(t: StudioClipTransform): StudioClipTransform 
 export function transformToApiRecord(
   t: StudioClipTransform,
   base?: StudioClipResponse["transform"] | null
-): {
-  [key: string]: unknown;
-} {
+): StudioClipTransform {
   return {
     ...readTransformRecord(base),
     ...transformToPayload(t),

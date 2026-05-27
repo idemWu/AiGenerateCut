@@ -5,6 +5,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { LOCAL_MEDIA_SCHEME, registerLocalMediaProtocol } from './localMedia/localProtocol'
 import { registerLocalMediaIpc } from './localMedia/ipc'
+import { registerStudioExportIpc } from './export/ipc'
 
 const APP_NAME = 'Movie Utopia Studio'
 const APP_USER_MODEL_ID = 'com.movieutopia.studio'
@@ -113,6 +114,7 @@ app.whenReady().then(async () => {
 
   ipcMain.on('ping', () => console.log('pong'))
   registerLocalMediaIpc()
+  registerStudioExportIpc()
 
   createWindow()
 

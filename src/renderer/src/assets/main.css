@@ -248,6 +248,14 @@ body.workspace-mode .site-footer {
   cursor: ew-resize;
 }
 
+.studio-razor-cursor,
+.studio-razor-cursor [data-clip-block] {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 8h14v2.2c-1 .42-1.55 1.05-1.55 1.8s.55 1.38 1.55 1.8V16H5v-2.2c1-.42 1.55-1.05 1.55-1.8S6 10.62 5 10.2V8Z' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8.75 12h6.5M10.25 10.2h3.5M10.25 13.8h3.5' fill='none' stroke='black' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M5 8h14v2.2c-1 .42-1.55 1.05-1.55 1.8s.55 1.38 1.55 1.8V16H5v-2.2c1-.42 1.55-1.05 1.55-1.8S6 10.62 5 10.2V8Z' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8.75 12h6.5M10.25 10.2h3.5M10.25 13.8h3.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")
+      12 12,
+    crosshair;
+}
+
 .studio-playhead-head {
   width: 0;
   height: 0;

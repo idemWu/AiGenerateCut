@@ -8,14 +8,10 @@ import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { Locale } from "@/lib/i18n/translations";
 import { withLocalePath } from "@/lib/i18n/routing";
-import { createStudioProject } from "@/lib/api/studio";
+import { createStudioProject, type StudioAspectRatio } from "@/lib/api/studio";
 import { useStudioProjects } from "@/lib/hooks/useStudio";
 import { useRequireLogin } from "@/lib/hooks/useRequireLogin";
 import { useAuthStore } from "@/lib/stores/authStore";
-import type { components } from "@/lib/api/schema";
-
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
-
 const PAGE_SIZE = 24;
 const ASPECT_RATIOS: StudioAspectRatio[] = ["16:9", "9:16", "1:1", "4:3", "3:4"];
 const PAGINATION_COPY: Record<

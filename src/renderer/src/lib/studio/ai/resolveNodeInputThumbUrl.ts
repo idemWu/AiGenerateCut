@@ -1,10 +1,9 @@
-import type { StudioWorkflowNodeResponse } from "@/lib/api/studio";
-import type { components } from "@/lib/api/schema";
+import type {
+  StudioWorkflowNodeInputResponse,
+  StudioWorkflowNodeResponse,
+} from "@/lib/api/studio";
 import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
 import type { PendingNodeInputThumb } from "./buildPendingNodeInputThumbs";
-
-type StudioWorkflowNodeInputResponse =
-  components["schemas"]["StudioWorkflowNodeInputResponse"];
 
 export interface ResolveNodeInputThumbUrlOptions {
   keyframesById?: Map<number, string | null | undefined>;

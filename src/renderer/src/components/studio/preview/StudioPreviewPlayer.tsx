@@ -13,8 +13,11 @@ import { captureCanvasToPngBlob } from "@/lib/studio/capturePreviewFrame";
 import { resolveStudioMediaUrl } from "@/lib/studio/resolveStudioMediaUrl";
 import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
-import type { StudioClipResponse, StudioTimelineTrackResponse } from "@/lib/api/studio";
-import type { components } from "@/lib/api/schema";
+import type {
+  StudioAspectRatio,
+  StudioClipResponse,
+  StudioTimelineTrackResponse,
+} from "@/lib/api/studio";
 import { aspectRatioToCanvasSize } from "@/lib/studio/composition/aspectRatioSize";
 import {
   applyClipWithTransform,
@@ -37,8 +40,6 @@ import StudioClipInlineTextEdit, {
   type StudioClipInlineTextEditHandle,
 } from "./StudioClipInlineTextEdit";
 import StudioClipTransformOverlay from "./StudioClipTransformOverlay";
-
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
 
 export interface StudioPreviewPlayerHandle {
   capturePreviewFrame: () => Promise<Blob>;

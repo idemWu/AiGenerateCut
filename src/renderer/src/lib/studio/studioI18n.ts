@@ -12,6 +12,7 @@ export function formatStudioStatusLabel(
     case "processing":
       return t("studioStatusProcessing");
     case "succeeded":
+    case "ready":
       return t("studioStatusSucceeded");
     case "failed":
       return t("studioStatusFailed");

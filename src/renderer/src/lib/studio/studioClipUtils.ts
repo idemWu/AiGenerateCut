@@ -54,6 +54,6 @@ export function resolveStudioAiWorkflowId(
   selectedClip: StudioClipResponse | null,
   activeWorkflowId: number | null
 ): number | null {
-  if (selectedClip) return selectedClip.workflow_id;
+  if (selectedClip) return selectedClip.workflow_id ?? null;
   return activeWorkflowId;
 }

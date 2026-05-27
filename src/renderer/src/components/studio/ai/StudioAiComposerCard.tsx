@@ -15,6 +15,7 @@ import type {
   StudioAspectRatio,
   StudioImageSize,
   StudioVideoMode,
+  StudioVideoProviderQuality,
 } from "@/lib/studio/studioAiResources";
 import StudioAiComposerToolbar from "./StudioAiComposerToolbar";
 import StudioAiReferenceStrip from "./StudioAiReferenceStrip";
@@ -42,6 +43,8 @@ interface StudioAiComposerCardProps {
   onVideoAspectRatioChange: (value: StudioAspectRatio) => void;
   videoDurationSec: number;
   onVideoDurationSecChange: (value: number) => void;
+  videoQuality: StudioVideoProviderQuality;
+  onVideoQualityChange: (value: StudioVideoProviderQuality) => void;
   hasVideoInput: boolean;
   onSubmit: () => void;
 }
@@ -69,6 +72,8 @@ export default function StudioAiComposerCard({
   onVideoAspectRatioChange,
   videoDurationSec,
   onVideoDurationSecChange,
+  videoQuality,
+  onVideoQualityChange,
   hasVideoInput,
   onSubmit,
 }: StudioAiComposerCardProps) {
@@ -80,7 +85,7 @@ export default function StudioAiComposerCard({
     | StudioAiModelInfo
     | undefined;
 
-  const placeholder = getStudioAiComposerPlaceholder(t, operationType, videoMode);
+  const placeholder = getStudioAiComposerPlaceholder(t, operationType, videoMode, modelId);
   const showStrip =
     operationType !== "video" || videoMode !== "text2video";
 
@@ -93,6 +98,7 @@ export default function StudioAiComposerCard({
         payload,
         operationType,
         videoMode,
+        modelId,
         references,
         onReferencesChange,
       });
@@ -100,7 +106,7 @@ export default function StudioAiComposerCard({
         toast.error(t("studioAiDropWrongType"));
       }
     },
-    [operationType, videoMode, references, onReferencesChange, t]
+    [operationType, videoMode, modelId, references, onReferencesChange, t]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -130,6 +136,7 @@ export default function StudioAiComposerCard({
           <StudioAiReferenceStrip
             operationType={operationType}
             videoMode={videoMode}
+            modelId={modelId}
             references={references}
             onReferencesChange={onReferencesChange}
             showDragHighlight={false}
@@ -165,6 +172,8 @@ export default function StudioAiComposerCard({
           onVideoAspectRatioChange={onVideoAspectRatioChange}
           videoDurationSec={videoDurationSec}
           onVideoDurationSecChange={onVideoDurationSecChange}
+          videoQuality={videoQuality}
+          onVideoQualityChange={onVideoQualityChange}
           hasVideoInput={hasVideoInput}
         />
       </div>

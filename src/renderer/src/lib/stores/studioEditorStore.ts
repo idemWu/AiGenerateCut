@@ -12,6 +12,7 @@ export type StudioSelectedModelByType = Partial<
 
 interface StudioEditorState {
   toolMode: StudioToolMode;
+  activeSessionId: number | null;
   activeWorkflowId: number | null;
   selectedModelByType: StudioSelectedModelByType;
   playheadSec: number;
@@ -19,6 +20,7 @@ interface StudioEditorState {
   selectedClipId: number | null;
   timelineZoom: number;
   setToolMode: (mode: StudioToolMode) => void;
+  setActiveSessionId: (id: number | null) => void;
   setActiveWorkflowId: (id: number | null) => void;
   setSelectedModelForType: (type: StudioAiOperationType, modelId: string) => void;
   setPlayheadSec: (sec: number | ((prev: number) => number)) => void;
@@ -39,6 +41,7 @@ export const useStudioEditorStore = create<StudioEditorState>()(
   persist(
     (set) => ({
       toolMode: "ai",
+      activeSessionId: null,
       activeWorkflowId: null,
       selectedModelByType: {},
       playheadSec: 0,
@@ -46,7 +49,10 @@ export const useStudioEditorStore = create<StudioEditorState>()(
       selectedClipId: null,
       timelineZoom: 80,
       setToolMode: (toolMode) => set({ toolMode }),
-      setActiveWorkflowId: (activeWorkflowId) => set({ activeWorkflowId }),
+      setActiveSessionId: (activeSessionId) =>
+        set({ activeSessionId, activeWorkflowId: activeSessionId }),
+      setActiveWorkflowId: (activeWorkflowId) =>
+        set({ activeWorkflowId, activeSessionId: activeWorkflowId }),
       setSelectedModelForType: (type, modelId) =>
         set((s) => ({
           selectedModelByType: { ...s.selectedModelByType, [type]: modelId },
@@ -74,6 +80,8 @@ export const useStudioEditorStore = create<StudioEditorState>()(
       merge: (persisted, current) => {
         const p = persisted as PersistedStudioEditorSlice | undefined;
         const merged = { ...current, ...p };
+        merged.activeSessionId = merged.activeSessionId ?? merged.activeWorkflowId ?? null;
+        merged.activeWorkflowId = merged.activeWorkflowId ?? merged.activeSessionId ?? null;
         if (
           p?.selectedModelId &&
           (!p.selectedModelByType || Object.keys(p.selectedModelByType).length === 0)

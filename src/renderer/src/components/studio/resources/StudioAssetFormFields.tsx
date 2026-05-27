@@ -6,7 +6,6 @@ import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import StudioAiPillSelect, {
   type StudioAiPillSelectOption,
 } from "@/components/studio/ai/StudioAiPillSelect";
-import type { components } from "@/lib/api/schema";
 import {
   findStudioModel,
   formatStudioModelOptionLabel,
@@ -14,11 +13,8 @@ import {
   type StudioAiModelInfo,
 } from "@/lib/studio/studioAiModels";
 import type { AssetImageGenerationFormState } from "@/lib/studio/assets/assetImageGenerationForm";
-import type { StudioAssetType } from "@/lib/api/studio";
+import type { StudioAspectRatio, StudioAssetType, StudioImageSize } from "@/lib/api/studio";
 import StudioAssetReferenceUpload from "./StudioAssetReferenceUpload";
-
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
-type StudioImageSize = components["schemas"]["StudioImageSize"];
 
 interface StudioAssetFormFieldsProps {
   state: AssetImageGenerationFormState;
@@ -99,6 +95,7 @@ export default function StudioAssetFormFields({
             <option value="character">{t("studioAssetTypeCharacter")}</option>
             <option value="scene">{t("studioAssetTypeScene")}</option>
             <option value="prop">{t("studioAssetTypeProp")}</option>
+            <option value="style">{t("studioAssetTypeStyle")}</option>
           </select>
         </div>
       ) : null}

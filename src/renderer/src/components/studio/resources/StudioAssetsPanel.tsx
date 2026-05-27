@@ -11,10 +11,10 @@ import {
   retryStudioAssetGeneration,
   selectStudioAssetCurrentImage,
   type StudioAiModelListResponse,
+  type StudioAspectRatio,
   type StudioAssetResponse,
   type StudioAssetType,
 } from "@/lib/api/studio";
-import type { components } from "@/lib/api/schema";
 import { useStudioAssets, useStudioAssetVariants } from "@/lib/hooks/useStudio";
 import { useStudioAssetHistories } from "@/lib/hooks/useStudioAssetHistories";
 import { useRequireLogin } from "@/lib/hooks/useRequireLogin";
@@ -39,8 +39,6 @@ import {
 } from "@/lib/studio/studioI18n";
 import StudioAssetFormFields from "./StudioAssetFormFields";
 
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
-
 type AssetPanelView =
   | { level: "list" }
   | { level: "create"; parentId?: number; regenerateAssetId?: number }
@@ -61,7 +59,7 @@ interface StudioAssetsPanelProps {
 
 type AssetTypeFilter = StudioAssetType | "all";
 
-const TYPE_FILTERS: AssetTypeFilter[] = ["all", "character", "scene", "prop"];
+const TYPE_FILTERS: AssetTypeFilter[] = ["all", "character", "scene", "prop", "style"];
 
 export default function StudioAssetsPanel({
   projectId,
@@ -145,7 +143,8 @@ export default function StudioAssetsPanel({
     if (type === "all") return t("studioAssetTypeAll");
     if (type === "character") return t("studioAssetTypeCharacter");
     if (type === "scene") return t("studioAssetTypeScene");
-    return t("studioAssetTypeProp");
+    if (type === "prop") return t("studioAssetTypeProp");
+    return t("studioAssetTypeStyle");
   };
 
   const handleDeleteAsset = useCallback(
@@ -439,7 +438,12 @@ function AssetThumbCard({
       onDragStart={(e) => {
         if (!thumbUrl) return;
         setStudioAiDragData(e.dataTransfer, {
-          source: { kind: "asset", id: asset.id },
+          source: {
+            kind: "asset",
+            id: asset.id,
+            resourceId: asset.resource_id ?? asset.current_image_resource_id,
+            currentVersionId: asset.current_version_id ?? asset.current_history_id,
+          },
           label: asset.name ?? formatStudioAssetFallbackName(asset.id, t),
           thumbUrl,
         });
@@ -728,7 +732,12 @@ function VariantThumbCard({
       onDragStart={(e) => {
         if (!thumbUrl) return;
         setStudioAiDragData(e.dataTransfer, {
-          source: { kind: "asset", id: asset.id },
+          source: {
+            kind: "asset",
+            id: asset.id,
+            resourceId: asset.resource_id ?? asset.current_image_resource_id,
+            currentVersionId: asset.current_version_id ?? asset.current_history_id,
+          },
           label: asset.name ?? formatStudioAssetFallbackName(asset.id, t),
           thumbUrl,
         });

@@ -754,7 +754,7 @@ export interface paths {
         put?: never;
         /**
          * Init multipart upload
-         * @description Initialize a multipart upload for large files (e.g. video). Only purpose video and ai_resource_video are allowed. Client then PUTs each part to the returned part upload_urls, collects ETags, and calls multipart/complete.
+         * @description Initialize a multipart upload for large files (e.g. video / lossless audio). Only purpose video / ai_resource_video / ai_resource_audio are allowed. Client then PUTs each part to the returned part upload_urls, collects ETags, and calls multipart/complete.
          */
         post: operations["init_multipart_upload_api_v1_files_multipart_init_post"];
         delete?: never;
@@ -1515,7 +1515,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/studio/projects": {
+    "/api/v1/creative/ai/models": {
         parameters: {
             query?: never;
             header?: never;
@@ -1523,17 +1523,473 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Studio 项目列表
-         * @description 分页获取当前用户未删除的 Studio 项目列表。
+         * AI 模型列表
+         * @description 返回 Creative 支持的 AI 模型列表，可通过 type=text/image/video 过滤。
          */
-        get: operations["list_projects_api_v1_studio_projects_get"];
+        get: operations["list_ai_models_api_v1_creative_ai_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 项目列表
+         * @description 分页获取当前用户未删除的 Creative 项目列表。
+         */
+        get: operations["list_projects_api_v1_creative_projects_get"];
         put?: never;
         /**
-         * 创建 Studio 项目
-         * @description 创建当前用户的 Studio 项目，需选择项目画布比例。封面请先通过 /files/upload-url 上传图片，再传 public_url。
+         * 创建 Creative 项目
+         * @description 创建当前用户的 Creative 项目（默认 project_type=studio）。若传入 cover_url 会自动登记封面 Resource 并自动创建一条默认 video track。
          */
-        post: operations["create_project_api_v1_studio_projects_post"];
+        post: operations["create_project_api_v1_creative_projects_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 项目详情
+         * @description 获取当前用户自己的项目详情。
+         */
+        get: operations["get_project_detail_api_v1_creative_projects__project_id__get"];
+        /**
+         * 编辑 Creative 项目
+         * @description 修改项目标题 / 描述 / 封面 / 比例 / 配置。cover_resource_id=0 表示清空封面。
+         */
+        put: operations["update_project_api_v1_creative_projects__project_id__put"];
+        post?: never;
+        /**
+         * 删除 Creative 项目
+         * @description 软删除项目；项目下的资源 / 会话 / 节点保留以支持回滚。
+         */
+        delete: operations["delete_project_api_v1_creative_projects__project_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/resources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 当前用户资源列表
+         * @description 分页获取当前用户全部未删除资源（不含 text_content）。可按 type 过滤。
+         */
+        get: operations["list_user_resources_api_v1_creative_resources_get"];
+        put?: never;
+        /**
+         * 上传文件创建 Creative 资源
+         * @description 前端 R2 直传后调用本接口登记资源元数据。仅支持文件上传场景（image / video / audio / document）；source_type 由后端固定为 upload，无需前端传递。
+         */
+        post: operations["create_resource_api_v1_creative_resources_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/resources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 项目资源列表
+         * @description 分页获取项目下未删除资源（不含 text_content）。
+         */
+        get: operations["list_project_resources_api_v1_creative_projects__project_id__resources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/resources/{resource_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 资源详情
+         * @description 获取资源详情（含 text_content）。
+         */
+        get: operations["get_resource_detail_api_v1_creative_resources__resource_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 会话列表
+         * @description 分页获取项目下未删除的会话。
+         */
+        get: operations["list_sessions_api_v1_creative_projects__project_id__sessions_get"];
+        put?: never;
+        /**
+         * 创建 Creative 会话
+         * @description 在项目下创建一个新会话（默认 session_type=studio）。
+         */
+        post: operations["create_session_api_v1_creative_projects__project_id__sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 会话详情
+         * @description 获取会话详情。
+         */
+        get: operations["get_session_detail_api_v1_creative_projects__project_id__sessions__session_id__get"];
+        /**
+         * 编辑 Creative 会话
+         * @description 更新会话标题 / 描述。
+         */
+        put: operations["update_session_api_v1_creative_projects__project_id__sessions__session_id__put"];
+        post?: never;
+        /**
+         * 删除 Creative 会话
+         * @description 软删除会话；若会话仍被时间线 clip 引用则会被拒绝。
+         */
+        delete: operations["delete_session_api_v1_creative_projects__project_id__sessions__session_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/sessions/{session_id}/nodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 会话节点列表
+         * @description 分页获取会话下未删除节点（含 inputs / outputs）。
+         */
+        get: operations["list_session_nodes_api_v1_creative_projects__project_id__sessions__session_id__nodes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/sessions/{session_id}/nodes/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 节点详情
+         * @description 获取节点详情（含 inputs / outputs）。
+         */
+        get: operations["get_node_detail_api_v1_creative_projects__project_id__sessions__session_id__nodes__node_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * 删除 Creative 节点
+         * @description 软删除节点；产物 Resource 不级联删除（保留以支持回滚）。
+         */
+        delete: operations["delete_node_api_v1_creative_projects__project_id__sessions__session_id__nodes__node_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/sessions/{session_id}/text-generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 文本生成（同步）
+         * @description 同步调用 Gemini 生成文本，立即返回节点（含 output）。
+         */
+        post: operations["create_text_generation_api_v1_creative_projects__project_id__sessions__session_id__text_generations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/sessions/{session_id}/image-generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 图片生成（异步）
+         * @description 异步入队 Gemini 图片生成。返回 pending 节点，结果通过节点详情查询。
+         */
+        post: operations["create_image_generation_api_v1_creative_projects__project_id__sessions__session_id__image_generations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/sessions/{session_id}/video-generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 视频生成（异步）
+         * @description 异步入队百炼可灵视频生成。返回 pending 节点，结果通过节点详情查询。
+         */
+        post: operations["create_video_generation_api_v1_creative_projects__project_id__sessions__session_id__video_generations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/sessions/{session_id}/nodes/{node_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 重试 Creative 节点
+         * @description 重置失败节点状态并重新入队（仅 image / video 类型节点可重试）。
+         */
+        post: operations["retry_node_api_v1_creative_projects__project_id__sessions__session_id__nodes__node_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 实体列表
+         * @description 分页获取项目下未删除的主体实体（不含变体）。
+         */
+        get: operations["list_entities_api_v1_creative_projects__project_id__entities_get"];
+        put?: never;
+        /**
+         * 创建 Creative 实体
+         * @description 创建实体（人物 / 场景 / 道具 / 风格）。可附带初始上传图或 AI 生成请求。
+         */
+        post: operations["create_entity_api_v1_creative_projects__project_id__entities_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/entities/{entity_id}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 实体变体列表
+         * @description 分页获取指定主体实体下的所有变体。
+         */
+        get: operations["list_entity_variants_api_v1_creative_projects__project_id__entities__entity_id__variants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/entities/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 编辑 Creative 实体
+         * @description 更新实体名称 / 描述 / 画像。变体不可改 entity_type。
+         */
+        put: operations["update_entity_api_v1_creative_projects__project_id__entities__entity_id__put"];
+        post?: never;
+        /**
+         * 删除 Creative 实体
+         * @description 软删除实体；变体 / 版本保留以支持回滚。
+         */
+        delete: operations["delete_entity_api_v1_creative_projects__project_id__entities__entity_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/entities/{entity_id}/current-version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 切换实体当前版本
+         * @description 把某个 ready 状态的版本设为实体当前展示版本。
+         */
+        put: operations["select_entity_current_version_api_v1_creative_projects__project_id__entities__entity_id__current_version_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/entities/{entity_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Creative 实体版本列表
+         * @description 分页获取实体下未删除版本。
+         */
+        get: operations["list_entity_versions_api_v1_creative_projects__project_id__entities__entity_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/entities/{entity_id}/generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 创建实体生成批次（异步）
+         * @description 异步入队 Gemini 图片生成；返回 pending 版本。
+         */
+        post: operations["create_entity_generation_api_v1_creative_projects__project_id__entities__entity_id__generations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/entities/{entity_id}/generations/{version_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 重试实体生成
+         * @description 重置失败版本状态并重新入队。
+         */
+        post: operations["retry_entity_generation_api_v1_creative_projects__project_id__entities__entity_id__generations__version_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/creative/projects/{project_id}/entities/{entity_id}/versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * 删除实体版本
+         * @description 软删除指定版本；若删除的是当前版本，会自动清空 current_version_id。
+         */
+        delete: operations["delete_entity_version_api_v1_creative_projects__project_id__entities__entity_id__versions__version_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1548,15 +2004,15 @@ export interface paths {
         };
         /**
          * Studio 项目轨道列表
-         * @description 获取当前用户自己的 Studio 项目轨道信息，包含每条轨道下未删除的 clips。
+         * @description 获取当前用户项目的全部未删除轨道，每条轨道附带其下未删除 clip。
          */
         get: operations["list_project_tracks_api_v1_studio_projects__project_id__tracks_get"];
         put?: never;
         /**
          * 创建 Studio 时间线轨道
-         * @description 在当前用户自己的 Studio 项目中创建一条时间线轨道。
+         * @description 在项目中追加一条时间线轨道（sort_order 自动取末位 + 1）。
          */
-        post: operations["create_timeline_track_api_v1_studio_projects__project_id__tracks_post"];
+        post: operations["create_track_api_v1_studio_projects__project_id__tracks_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1573,57 +2029,77 @@ export interface paths {
         get?: never;
         /**
          * 编辑 Studio 时间线轨道
-         * @description 修改轨道标题、排序、静音或锁定状态。
+         * @description 修改轨道标题 / 排序 / 静音 / 锁定。
          */
-        put: operations["update_timeline_track_api_v1_studio_projects__project_id__tracks__track_id__put"];
+        put: operations["update_track_api_v1_studio_projects__project_id__tracks__track_id__put"];
         post?: never;
         /**
          * 删除 Studio 时间线轨道
-         * @description 软删除空轨道。若轨道下仍有未删除的 clip，会被拒绝。
+         * @description 软删除空轨道。若轨道下仍有未删除 clip 会被拒绝。
          */
-        delete: operations["delete_timeline_track_api_v1_studio_projects__project_id__tracks__track_id__delete"];
+        delete: operations["delete_track_api_v1_studio_projects__project_id__tracks__track_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/studio/projects/{project_id}/assets": {
+    "/api/v1/studio/projects/{project_id}/clips": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Studio 资产列表
-         * @description 分页获取当前用户项目下的顶级资产，可通过 asset_type 切换人物、场景、道具。
-         */
-        get: operations["list_assets_api_v1_studio_projects__project_id__assets_get"];
+        get?: never;
         put?: never;
         /**
-         * 创建 Studio 资产
-         * @description 创建顶级资产或指定 parent_id 创建资产变体。支持两种模式：① 传 image_urls 以上传图初始化；② 无 image_urls 且同时传 prompt+model 时自动创建生成批次并入队（参数与 POST .../generations 一致）。图片请先通过 /files/upload-url 上传 R2，再传 object_key 或 public URL。
+         * 创建 Studio 时间线 clip
+         * @description 在指定 track 上创建 clip。三选一：node output / resource / 文本占位。
          */
-        post: operations["create_asset_api_v1_studio_projects__project_id__assets_post"];
+        post: operations["create_clip_api_v1_studio_projects__project_id__clips_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/studio/projects/{project_id}/assets/{asset_id}/variants": {
+    "/api/v1/studio/projects/{project_id}/clips/{clip_id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        get?: never;
         /**
-         * Studio 资产变体列表
-         * @description 分页获取某个顶级资产下的变体列表。
+         * 编辑 Studio 时间线 clip
+         * @description 修改 clip 时间线 / 展示属性 / 文本内容 / 状态。
          */
-        get: operations["list_asset_variants_api_v1_studio_projects__project_id__assets__asset_id__variants_get"];
-        put?: never;
+        put: operations["update_clip_api_v1_studio_projects__project_id__clips__clip_id__put"];
+        post?: never;
+        /**
+         * 删除 Studio 时间线 clip
+         * @description 软删除 clip。
+         */
+        delete: operations["delete_clip_api_v1_studio_projects__project_id__clips__clip_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studio/projects/{project_id}/clips/{clip_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 绑定 Studio clip 内容来源
+         * @description 把 clip 绑定到 session node output 或 resource（互斥）。
+         */
+        put: operations["update_clip_content_api_v1_studio_projects__project_id__clips__clip_id__content_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1631,7 +2107,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/studio/projects/{project_id}/assets/{asset_id}/histories": {
+    "/api/v1/studio/projects/{project_id}/sessions/{session_id}/clips": {
         parameters: {
             query?: never;
             header?: never;
@@ -1639,115 +2115,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Studio 资产生成历史
-         * @description 分页获取某个资产的批量生成历史，每条历史可包含多张候选图。
+         * Creative 会话下 clip 列表
+         * @description 获取指定会话下未删除 clip。
          */
-        get: operations["list_asset_histories_api_v1_studio_projects__project_id__assets__asset_id__histories_get"];
+        get: operations["list_session_clips_api_v1_studio_projects__project_id__sessions__session_id__clips_get"];
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/assets/{asset_id}/generations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 创建 Studio 资产生成批次
-         * @description 为资产创建一次图片生成历史并入队异步生成；一次批次可生成多张候选图。
-         */
-        post: operations["create_asset_generation_api_v1_studio_projects__project_id__assets__asset_id__generations_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/assets/{asset_id}/generations/{history_id}/retry": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 重试 Studio 资产生成批次
-         * @description 对失败或超时的资产历史批次重新入队 RQ。
-         */
-        post: operations["retry_asset_generation_api_v1_studio_projects__project_id__assets__asset_id__generations__history_id__retry_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/assets/{asset_id}/histories/{history_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * 删除 Studio 资产历史批次
-         * @description 物理删除一条资产生成历史，并清理 R2 上的候选图与当前展示引用。
-         */
-        delete: operations["delete_asset_history_api_v1_studio_projects__project_id__assets__asset_id__histories__history_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/assets/{asset_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 编辑 Studio 资产
-         * @description 编辑资产名称或类型（变体不可修改类型）。
-         */
-        put: operations["update_asset_api_v1_studio_projects__project_id__assets__asset_id__put"];
-        post?: never;
-        /**
-         * 删除 Studio 资产
-         * @description 软删除资产。若是顶级资产将同时软删未删除的变体；被工作流节点引用的资产会被拒绝删除。
-         */
-        delete: operations["delete_asset_api_v1_studio_projects__project_id__assets__asset_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/assets/{asset_id}/current-image": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 选择 Studio 资产当前展示图
-         * @description 从某个已成功生成的资产历史候选图中选择一张，写回资产主表作为当前展示图。
-         */
-        put: operations["select_asset_current_image_api_v1_studio_projects__project_id__assets__asset_id__current_image_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1764,13 +2136,13 @@ export interface paths {
         };
         /**
          * Studio 关键帧列表
-         * @description 分页获取当前用户项目下的关键帧列表。
+         * @description 分页获取项目下未删除关键帧。
          */
-        get: operations["list_keyframes_api_v1_studio_projects__project_id__keyframes_get"];
+        get: operations["list_project_keyframes_api_v1_studio_projects__project_id__keyframes_get"];
         put?: never;
         /**
          * 创建 Studio 关键帧
-         * @description 创建关键帧，支持上传图、视频截帧上传图，以及从 Workflow 生成图片产物直接加入关键帧列表。
+         * @description 创建关键帧。upload / generated / screenshot 三种来源。
          */
         post: operations["create_keyframe_api_v1_studio_projects__project_id__keyframes_post"];
         delete?: never;
@@ -1791,325 +2163,9 @@ export interface paths {
         post?: never;
         /**
          * 删除 Studio 关键帧
-         * @description 软删除关键帧；若仍被工作流节点输入引用，会被拒绝删除。
+         * @description 软删除关键帧。
          */
         delete: operations["delete_keyframe_api_v1_studio_projects__project_id__keyframes__keyframe_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/clips": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 创建 Studio 时间线 clip
-         * @description 在项目时间线上创建 clip，支持 empty、node_output、upload 三种来源；自动选择无冲突轨道，全部冲突时自动新建轨道。
-         */
-        post: operations["create_clip_api_v1_studio_projects__project_id__clips_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/clips/{clip_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 编辑 Studio 时间线 clip
-         * @description 编辑 clip 的轨道、时间线区间、媒体内部区间、transform、标题、状态或手动文本内容。传入 text_content 可将空 clip 设为文本并自动创建/同步 workflow node output。
-         */
-        put: operations["update_clip_api_v1_studio_projects__project_id__clips__clip_id__put"];
-        post?: never;
-        /**
-         * 删除 Studio 时间线 clip
-         * @description 软删除当前用户项目中的 clip，不删除其关联 workflow。
-         */
-        delete: operations["delete_clip_api_v1_studio_projects__project_id__clips__clip_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/clips/{clip_id}/content": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 修改 Studio clip 内容
-         * @description 将 clip 内容替换为指定 workflow node output 的快照，不修改时间线位置、时长或标题。改标题请使用 PUT .../clips/{clip_id}。
-         */
-        put: operations["update_clip_content_api_v1_studio_projects__project_id__clips__clip_id__content_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Studio workflow 列表
-         * @description 分页获取当前用户项目下未删除的 workflows。
-         */
-        get: operations["list_workflows_api_v1_studio_projects__project_id__workflows_get"];
-        put?: never;
-        /**
-         * 创建 Studio Workflow
-         * @description 在当前项目下创建一个工作流。
-         */
-        post: operations["create_workflow_api_v1_studio_projects__project_id__workflows_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows/{workflow_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Studio Workflow 详情
-         * @description 获取单个 workflow 的基础信息。
-         */
-        get: operations["get_workflow_detail_api_v1_studio_projects__project_id__workflows__workflow_id__get"];
-        /**
-         * 编辑 Studio Workflow
-         * @description 编辑工作流标题或描述。
-         */
-        put: operations["update_workflow_api_v1_studio_projects__project_id__workflows__workflow_id__put"];
-        post?: never;
-        /**
-         * 删除 Studio Workflow
-         * @description 软删除工作流。若 workflow 仍被未删除 clip 引用，会被拒绝。
-         */
-        delete: operations["delete_workflow_api_v1_studio_projects__project_id__workflows__workflow_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows/{workflow_id}/nodes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Studio workflow nodes 列表
-         * @description 分页获取 workflow 下的 nodes，并返回每个 node 的 inputs 和 outputs。
-         */
-        get: operations["list_workflow_nodes_api_v1_studio_projects__project_id__workflows__workflow_id__nodes_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows/{workflow_id}/text-generations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 创建 Studio Workflow 文本生成
-         * @description 在 workflow 下同步创建文本生成节点。支持多模态输入：`inputs` 中可携带图片让 AI 分析（input_role=image）。
-         *
-         *     接口同步执行，直接返回 status=succeeded 的 node，outputs 字段包含生成的文本内容；无需轮询。失败时返回 HTTP 200 + 业务错误码（8063 参考图无效 / 8064 生成失败），node 状态会被写为 failed。
-         */
-        post: operations["create_text_generation_api_v1_studio_projects__project_id__workflows__workflow_id__text_generations_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows/{workflow_id}/image-generations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 创建 Studio Workflow 图片生成任务
-         * @description 在 workflow 下创建图片生成节点，并将生成任务入队 RQ。接口立即返回 status=pending 的 node。
-         *
-         *     前端需要轮询 `GET /v1/studio/{project_id}/workflows/{workflow_id}/nodes/{node_id}` 直到 status 变为 `succeeded` 或 `failed`；succeeded 时 outputs 字段会包含生成的图片，failed 时 error_message 字段会有失败原因。任务通常耗时 10~60 秒。
-         */
-        post: operations["create_image_generation_api_v1_studio_projects__project_id__workflows__workflow_id__image_generations_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows/{workflow_id}/video-generations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 创建 Studio Workflow 视频生成任务
-         * @description 在 workflow 下创建视频生成节点，并将生成任务入队 RQ。接口立即返回 status=pending 的 node。
-         *
-         *     前端需要轮询 `GET /v1/studio/{project_id}/workflows/{workflow_id}/nodes/{node_id}` 直到 status 变为 `succeeded` 或 `failed`；succeeded 时 outputs 字段会包含生成的视频，failed 时 error_message 字段会有失败原因。视频生成任务可能耗时数十秒到数分钟。
-         *
-         *     百炼可灵 v3 仅生成 1 个视频（不再接受 generate_count 字段）。
-         */
-        post: operations["create_video_generation_api_v1_studio_projects__project_id__workflows__workflow_id__video_generations_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows/{workflow_id}/nodes/{node_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Studio workflow node 详情
-         * @description 获取单个 workflow node 详情，返回结构与 nodes 列表中的单项完全一致。
-         */
-        get: operations["get_workflow_node_detail_api_v1_studio_projects__project_id__workflows__workflow_id__nodes__node_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * 删除 Studio workflow node
-         * @description 物理删除工作流节点（含 inputs/outputs），并清理 R2 上的输出对象与时间线 clip 的引用。
-         */
-        delete: operations["delete_workflow_node_api_v1_studio_projects__project_id__workflows__workflow_id__nodes__node_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows/{workflow_id}/nodes/{node_id}/retry": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 重试 Studio workflow node
-         * @description 对失败或超时的图片/视频生成节点重新入队 RQ。视频节点保留已申请的外部任务ID用以复用。
-         */
-        post: operations["retry_workflow_node_api_v1_studio_projects__project_id__workflows__workflow_id__nodes__node_id__retry_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}/workflows/{workflow_id}/clips": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Studio workflow clip 列表
-         * @description 获取 workflow 下未删除的 clips。
-         */
-        get: operations["list_workflow_clips_api_v1_studio_projects__project_id__workflows__workflow_id__clips_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/projects/{project_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Studio 项目详情
-         * @description 获取当前用户自己的 Studio 项目详情。
-         */
-        get: operations["get_project_detail_api_v1_studio_projects__project_id__get"];
-        /**
-         * 修改 Studio 项目
-         * @description 修改当前用户自己的 Studio 项目标题、描述、封面或画布比例。
-         */
-        put: operations["update_project_api_v1_studio_projects__project_id__put"];
-        post?: never;
-        /**
-         * 删除 Studio 项目
-         * @description 软删除当前用户自己的 Studio 项目。
-         */
-        delete: operations["delete_project_api_v1_studio_projects__project_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/studio/ai/models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Studio AI 模型列表
-         * @description 获取 Workflow AI 生成支持的模型列表，可通过 type=text/image/video 过滤。
-         */
-        get: operations["list_ai_models_api_v1_studio_ai_models_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2129,6 +2185,60 @@ export interface components {
              * @description 6位邀请码
              */
             code: string;
+        };
+        /**
+         * AiModelInfo
+         * @description AI 模型信息。
+         */
+        AiModelInfo: {
+            /**
+             * Id
+             * @description 模型 ID
+             */
+            id: string;
+            /**
+             * Name
+             * @description 模型展示名
+             */
+            name: string;
+            /** @description 模型分类：text/image/video */
+            kind: components["schemas"]["CreativeAiModelKind"];
+            /**
+             * Supported Aspect Ratios
+             * @description 支持的比例
+             */
+            supported_aspect_ratios?: components["schemas"]["CreativeAspectRatio"][];
+            /**
+             * Supported Image Sizes
+             * @description 支持的图片尺寸
+             */
+            supported_image_sizes?: components["schemas"]["CreativeImageSize"][];
+            /**
+             * Supported Durations
+             * @description 支持的视频时长（秒）
+             */
+            supported_durations?: number[];
+        };
+        /**
+         * AiModelListResponse
+         * @description AI 模型列表响应。
+         */
+        AiModelListResponse: {
+            /**
+             * Text Models
+             * @description 语言模型
+             */
+            text_models?: components["schemas"]["AiModelInfo"][];
+            /**
+             * Image Models
+             * @description 图片生成模型
+             */
+            image_models?: components["schemas"]["AiModelInfo"][];
+            /**
+             * Video Models
+             * @description 视频生成模型
+             */
+            video_models?: components["schemas"]["AiModelInfo"][];
         };
         /**
          * ApplyBountyRequest
@@ -2243,6 +2353,29 @@ export interface components {
             data?: unknown | null;
         };
         /**
+         * BaseResponse[AiModelListResponse]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_AiModelListResponse_: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["AiModelListResponse"] | null;
+        };
+        /**
          * BaseResponse[BountyApplicationItem]
          * @example {
          *       "code": 0,
@@ -2333,6 +2466,29 @@ export interface components {
             msg: string;
             /** @description Response data payload */
             data?: components["schemas"]["CarouselListResponse"] | null;
+        };
+        /**
+         * BaseResponse[ClipResponse]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_ClipResponse_: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["ClipResponse"] | null;
         };
         /**
          * BaseResponse[ConversationDetail]
@@ -2450,6 +2606,52 @@ export interface components {
             data?: components["schemas"]["EditorPicksListResponse"] | null;
         };
         /**
+         * BaseResponse[EntityResponse]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_EntityResponse_: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["EntityResponse"] | null;
+        };
+        /**
+         * BaseResponse[EntityVersionResponse]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_EntityVersionResponse_: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["EntityVersionResponse"] | null;
+        };
+        /**
          * BaseResponse[FeedPostCommentCreatedResponse]
          * @example {
          *       "code": 0,
@@ -2563,6 +2765,29 @@ export interface components {
             msg: string;
             /** @description Response data payload */
             data?: components["schemas"]["FollowListResponse"] | null;
+        };
+        /**
+         * BaseResponse[KeyframeResponse]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_KeyframeResponse_: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["KeyframeResponse"] | null;
         };
         /**
          * BaseResponse[List[ConversationListItem]]
@@ -2798,6 +3023,29 @@ export interface components {
             data?: components["schemas"]["NewsRecommendationListResponse"] | null;
         };
         /**
+         * BaseResponse[NodeResponse]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_NodeResponse_: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["NodeResponse"] | null;
+        };
+        /**
          * BaseResponse[NoneType]
          * @example {
          *       "code": 0,
@@ -2916,6 +3164,75 @@ export interface components {
             data?: components["schemas"]["PageData_BountyItemResponse_"] | null;
         };
         /**
+         * BaseResponse[PageData[EntityResponse]]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_PageData_EntityResponse__: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["PageData_EntityResponse_"] | null;
+        };
+        /**
+         * BaseResponse[PageData[EntityVersionResponse]]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_PageData_EntityVersionResponse__: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["PageData_EntityVersionResponse_"] | null;
+        };
+        /**
+         * BaseResponse[PageData[KeyframeResponse]]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_PageData_KeyframeResponse__: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["PageData_KeyframeResponse_"] | null;
+        };
+        /**
          * BaseResponse[PageData[MessageItemResponse]]
          * @example {
          *       "code": 0,
@@ -2939,13 +3256,13 @@ export interface components {
             data?: components["schemas"]["PageData_MessageItemResponse_"] | null;
         };
         /**
-         * BaseResponse[PageData[StudioAssetHistoryResponse]]
+         * BaseResponse[PageData[NodeResponse]]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_PageData_StudioAssetHistoryResponse__: {
+        BaseResponse_PageData_NodeResponse__: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -2959,16 +3276,16 @@ export interface components {
              */
             msg: string;
             /** @description Response data payload */
-            data?: components["schemas"]["PageData_StudioAssetHistoryResponse_"] | null;
+            data?: components["schemas"]["PageData_NodeResponse_"] | null;
         };
         /**
-         * BaseResponse[PageData[StudioAssetResponse]]
+         * BaseResponse[PageData[ProjectResponse]]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_PageData_StudioAssetResponse__: {
+        BaseResponse_PageData_ProjectResponse__: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -2982,16 +3299,16 @@ export interface components {
              */
             msg: string;
             /** @description Response data payload */
-            data?: components["schemas"]["PageData_StudioAssetResponse_"] | null;
+            data?: components["schemas"]["PageData_ProjectResponse_"] | null;
         };
         /**
-         * BaseResponse[PageData[StudioKeyframeResponse]]
+         * BaseResponse[PageData[ResourceListItem]]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_PageData_StudioKeyframeResponse__: {
+        BaseResponse_PageData_ResourceListItem__: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -3005,16 +3322,16 @@ export interface components {
              */
             msg: string;
             /** @description Response data payload */
-            data?: components["schemas"]["PageData_StudioKeyframeResponse_"] | null;
+            data?: components["schemas"]["PageData_ResourceListItem_"] | null;
         };
         /**
-         * BaseResponse[PageData[StudioProjectResponse]]
+         * BaseResponse[PageData[SessionResponse]]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_PageData_StudioProjectResponse__: {
+        BaseResponse_PageData_SessionResponse__: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -3028,16 +3345,16 @@ export interface components {
              */
             msg: string;
             /** @description Response data payload */
-            data?: components["schemas"]["PageData_StudioProjectResponse_"] | null;
+            data?: components["schemas"]["PageData_SessionResponse_"] | null;
         };
         /**
-         * BaseResponse[PageData[StudioWorkflowNodeResponse]]
+         * BaseResponse[ProjectResponse]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_PageData_StudioWorkflowNodeResponse__: {
+        BaseResponse_ProjectResponse_: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -3051,30 +3368,7 @@ export interface components {
              */
             msg: string;
             /** @description Response data payload */
-            data?: components["schemas"]["PageData_StudioWorkflowNodeResponse_"] | null;
-        };
-        /**
-         * BaseResponse[PageData[StudioWorkflowResponse]]
-         * @example {
-         *       "code": 0,
-         *       "msg": "success"
-         *     }
-         */
-        BaseResponse_PageData_StudioWorkflowResponse__: {
-            /**
-             * Code
-             * @description Business status code (0 = success, >0 = error)
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @description Response message
-             * @default success
-             */
-            msg: string;
-            /** @description Response data payload */
-            data?: components["schemas"]["PageData_StudioWorkflowResponse_"] | null;
+            data?: components["schemas"]["ProjectResponse"] | null;
         };
         /**
          * BaseResponse[RecommendedAuthorListResponse]
@@ -3100,13 +3394,13 @@ export interface components {
             data?: components["schemas"]["RecommendedAuthorListResponse"] | null;
         };
         /**
-         * BaseResponse[StudioAiModelListResponse]
+         * BaseResponse[ResourceResponse]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_StudioAiModelListResponse_: {
+        BaseResponse_ResourceResponse_: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -3120,16 +3414,16 @@ export interface components {
              */
             msg: string;
             /** @description Response data payload */
-            data?: components["schemas"]["StudioAiModelListResponse"] | null;
+            data?: components["schemas"]["ResourceResponse"] | null;
         };
         /**
-         * BaseResponse[StudioAssetHistoryResponse]
+         * BaseResponse[SessionResponse]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_StudioAssetHistoryResponse_: {
+        BaseResponse_SessionResponse_: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -3143,168 +3437,7 @@ export interface components {
              */
             msg: string;
             /** @description Response data payload */
-            data?: components["schemas"]["StudioAssetHistoryResponse"] | null;
-        };
-        /**
-         * BaseResponse[StudioAssetResponse]
-         * @example {
-         *       "code": 0,
-         *       "msg": "success"
-         *     }
-         */
-        BaseResponse_StudioAssetResponse_: {
-            /**
-             * Code
-             * @description Business status code (0 = success, >0 = error)
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @description Response message
-             * @default success
-             */
-            msg: string;
-            /** @description Response data payload */
-            data?: components["schemas"]["StudioAssetResponse"] | null;
-        };
-        /**
-         * BaseResponse[StudioClipResponse]
-         * @example {
-         *       "code": 0,
-         *       "msg": "success"
-         *     }
-         */
-        BaseResponse_StudioClipResponse_: {
-            /**
-             * Code
-             * @description Business status code (0 = success, >0 = error)
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @description Response message
-             * @default success
-             */
-            msg: string;
-            /** @description Response data payload */
-            data?: components["schemas"]["StudioClipResponse"] | null;
-        };
-        /**
-         * BaseResponse[StudioKeyframeResponse]
-         * @example {
-         *       "code": 0,
-         *       "msg": "success"
-         *     }
-         */
-        BaseResponse_StudioKeyframeResponse_: {
-            /**
-             * Code
-             * @description Business status code (0 = success, >0 = error)
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @description Response message
-             * @default success
-             */
-            msg: string;
-            /** @description Response data payload */
-            data?: components["schemas"]["StudioKeyframeResponse"] | null;
-        };
-        /**
-         * BaseResponse[StudioProjectResponse]
-         * @example {
-         *       "code": 0,
-         *       "msg": "success"
-         *     }
-         */
-        BaseResponse_StudioProjectResponse_: {
-            /**
-             * Code
-             * @description Business status code (0 = success, >0 = error)
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @description Response message
-             * @default success
-             */
-            msg: string;
-            /** @description Response data payload */
-            data?: components["schemas"]["StudioProjectResponse"] | null;
-        };
-        /**
-         * BaseResponse[StudioTimelineTrackResponse]
-         * @example {
-         *       "code": 0,
-         *       "msg": "success"
-         *     }
-         */
-        BaseResponse_StudioTimelineTrackResponse_: {
-            /**
-             * Code
-             * @description Business status code (0 = success, >0 = error)
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @description Response message
-             * @default success
-             */
-            msg: string;
-            /** @description Response data payload */
-            data?: components["schemas"]["StudioTimelineTrackResponse"] | null;
-        };
-        /**
-         * BaseResponse[StudioWorkflowNodeResponse]
-         * @example {
-         *       "code": 0,
-         *       "msg": "success"
-         *     }
-         */
-        BaseResponse_StudioWorkflowNodeResponse_: {
-            /**
-             * Code
-             * @description Business status code (0 = success, >0 = error)
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @description Response message
-             * @default success
-             */
-            msg: string;
-            /** @description Response data payload */
-            data?: components["schemas"]["StudioWorkflowNodeResponse"] | null;
-        };
-        /**
-         * BaseResponse[StudioWorkflowResponse]
-         * @example {
-         *       "code": 0,
-         *       "msg": "success"
-         *     }
-         */
-        BaseResponse_StudioWorkflowResponse_: {
-            /**
-             * Code
-             * @description Business status code (0 = success, >0 = error)
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @description Response message
-             * @default success
-             */
-            msg: string;
-            /** @description Response data payload */
-            data?: components["schemas"]["StudioWorkflowResponse"] | null;
+            data?: components["schemas"]["SessionResponse"] | null;
         };
         /**
          * BaseResponse[SystemNotificationListResponse]
@@ -3397,6 +3530,29 @@ export interface components {
             msg: string;
             /** @description Response data payload */
             data?: components["schemas"]["TokenResponse"] | null;
+        };
+        /**
+         * BaseResponse[TrackResponse]
+         * @example {
+         *       "code": 0,
+         *       "msg": "success"
+         *     }
+         */
+        BaseResponse_TrackResponse_: {
+            /**
+             * Code
+             * @description Business status code (0 = success, >0 = error)
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @description Response message
+             * @default success
+             */
+            msg: string;
+            /** @description Response data payload */
+            data?: components["schemas"]["TrackResponse"] | null;
         };
         /**
          * BaseResponse[Union[FeedPostListResponse, PageData[UserPublicProfileResponse]]]
@@ -3632,13 +3788,13 @@ export interface components {
             data?: components["schemas"]["VideoPlayRecordedResponse"] | null;
         };
         /**
-         * BaseResponse[list[StudioClipResponse]]
+         * BaseResponse[list[ClipResponse]]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_list_StudioClipResponse__: {
+        BaseResponse_list_ClipResponse__: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -3655,16 +3811,16 @@ export interface components {
              * Data
              * @description Response data payload
              */
-            data?: components["schemas"]["StudioClipResponse"][] | null;
+            data?: components["schemas"]["ClipResponse"][] | null;
         };
         /**
-         * BaseResponse[list[StudioTimelineTrackResponse]]
+         * BaseResponse[list[TrackResponse]]
          * @example {
          *       "code": 0,
          *       "msg": "success"
          *     }
          */
-        BaseResponse_list_StudioTimelineTrackResponse__: {
+        BaseResponse_list_TrackResponse__: {
             /**
              * Code
              * @description Business status code (0 = success, >0 = error)
@@ -3681,7 +3837,7 @@ export interface components {
              * Data
              * @description Response data payload
              */
-            data?: components["schemas"]["StudioTimelineTrackResponse"][] | null;
+            data?: components["schemas"]["TrackResponse"][] | null;
         };
         /**
          * BindAuthRequest
@@ -4066,6 +4222,62 @@ export interface components {
             items?: components["schemas"]["CarouselItemResponse"][];
         };
         /**
+         * ClipResponse
+         * @description Studio 时间线 clip 响应。
+         */
+        ClipResponse: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Track Id */
+            track_id: number;
+            /** Session Id */
+            session_id: number;
+            /** Session Node Id */
+            session_node_id?: number | null;
+            /** Session Node Output Id */
+            session_node_output_id?: number | null;
+            /** Resource Id */
+            resource_id?: number | null;
+            /** Title */
+            title?: string | null;
+            clip_type: components["schemas"]["StudioClipType"];
+            /** Text Content */
+            text_content?: string | null;
+            /** Media Url */
+            media_url?: string | null;
+            /** Source Duration Sec */
+            source_duration_sec?: number | null;
+            /** Aspect Ratio */
+            aspect_ratio?: string | null;
+            status: components["schemas"]["StudioClipStatus"];
+            /** Start Sec */
+            start_sec: number;
+            /** End Sec */
+            end_sec: number;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Media Start Sec */
+            media_start_sec: number;
+            /** Media End Sec */
+            media_end_sec?: number | null;
+            /** Transform */
+            transform?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+        };
+        /**
          * ConversationDetail
          * @description 会话详情（含对方信息、最后一条消息、未读数、对方与当前用户关系）
          */
@@ -4285,6 +4497,190 @@ export interface components {
             total_price: number;
         };
         /**
+         * CreateClipRequest
+         * @description 创建 Studio 时间线 clip 请求（极简）。
+         *
+         *     五种创建场景（来源字段最多传一种）：
+         *     - A 上传文件：object_url + mime_type（必填）+ 可选 width/height/aspect_ratio
+         *     - B 节点产物：session_node_output_id
+         *     - C 引用已有资源：resource_id（从素材库挂到时间线）
+         *     - D 文字 clip：text_content
+         *     - 空 clip：什么都不传（默认 text 类型）
+         *
+         *     后端自动推断：
+         *     - clip_type     从 mime_type 前缀 / output.resource.resource_type / resource.resource_type / 默认 text
+         *     - track         clip_type=audio→音轨，其他→普通轨；按 sort_order 找首个不冲突 track，否则新建
+         *     - duration_sec  来源资源若有 duration_sec（video/audio）则用资源时长，否则默认 5 秒
+         *     - session/node  上传/引用资源/文字场景新建 session + 建 user_input node；节点产物复用 output.session/node；空 clip 只建 session
+         */
+        CreateClipRequest: {
+            /**
+             * Start Sec
+             * @description clip 在项目时间线上的开始秒
+             */
+            start_sec: number;
+            /**
+             * Title
+             * @description clip 标题
+             */
+            title?: string | null;
+            /**
+             * Object Url
+             * @description 上传文件 URL（场景 A）
+             */
+            object_url?: string | null;
+            /**
+             * Mime Type
+             * @description 上传文件 MIME 类型（场景 A 必填，用于推断 clip_type）
+             */
+            mime_type?: string | null;
+            /**
+             * Width
+             * @description 上传文件宽度
+             */
+            width?: number | null;
+            /**
+             * Height
+             * @description 上传文件高度
+             */
+            height?: number | null;
+            /**
+             * Aspect Ratio
+             * @description 比例
+             */
+            aspect_ratio?: string | null;
+            /**
+             * Session Node Output Id
+             * @description 引用节点产物 ID（场景 B）
+             */
+            session_node_output_id?: number | null;
+            /**
+             * Resource Id
+             * @description 引用已有资源 ID（场景 C，与其他来源互斥）
+             */
+            resource_id?: number | null;
+            /**
+             * Text Content
+             * @description 文本内容（场景 D，clip_type 自动判为 text）
+             */
+            text_content?: string | null;
+        };
+        /**
+         * CreateEntityGenerationRequest
+         * @description 创建 Creative 实体生成批次请求。
+         */
+        CreateEntityGenerationRequest: {
+            /**
+             * Prompt
+             * @description 提示词
+             */
+            prompt: string;
+            /**
+             * Model
+             * @description 图片生成模型 ID
+             */
+            model: string;
+            /** @description 图片比例 */
+            aspect_ratio?: components["schemas"]["CreativeAspectRatio"] | null;
+            /** @description 图片尺寸 */
+            image_size?: components["schemas"]["CreativeImageSize"] | null;
+            /**
+             * Generate Count
+             * @description 生成数量
+             * @default 1
+             */
+            generate_count: number;
+            /**
+             * Reference Resource Ids
+             * @description 参考资源 ID 列表
+             */
+            reference_resource_ids?: number[];
+            /**
+             * Params
+             * @description 生成扩展参数
+             */
+            params?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * CreateEntityRequest
+         * @description 创建 Creative 实体请求。
+         *
+         *     可选三种创建模式：
+         *     - 仅创建实体壳子（不传 image_urls 也不传 prompt）
+         *     - 上传初始候选图（传 image_urls）
+         *     - 生成初始候选图（传 prompt + model + 参数）
+         */
+        CreateEntityRequest: {
+            /**
+             * Parent Id
+             * @description 父级实体 ID；为空表示创建主体，非空表示创建变体
+             */
+            parent_id?: number | null;
+            /** @description 实体类型；创建主体必填，变体继承父级 */
+            entity_type?: components["schemas"]["CreativeEntityType"] | null;
+            /**
+             * Name
+             * @description 实体名称
+             */
+            name?: string | null;
+            /**
+             * Description
+             * @description 实体描述
+             */
+            description?: string | null;
+            /**
+             * Image Urls
+             * @description 初始候选图 public URL 或 object_key 列表（上传场景）
+             */
+            image_urls?: string[];
+            /**
+             * Selected Image Url
+             * @description 初始选中的当前展示图
+             */
+            selected_image_url?: string | null;
+            /**
+             * Prompt
+             * @description 初始提示词（生成场景）
+             */
+            prompt?: string | null;
+            /**
+             * Model
+             * @description 生成模型 ID
+             */
+            model?: string | null;
+            /** @description 图片比例 */
+            aspect_ratio?: components["schemas"]["CreativeAspectRatio"] | null;
+            /** @description 图片尺寸：1K / 2K / 4K */
+            image_size?: components["schemas"]["CreativeImageSize"] | null;
+            /**
+             * Generate Count
+             * @description 生成数量
+             * @default 1
+             */
+            generate_count: number;
+            /**
+             * Reference Resource Ids
+             * @description 参考资源 ID 列表
+             */
+            reference_resource_ids?: number[];
+            /**
+             * Params
+             * @description 生成扩展参数
+             */
+            params?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Profile
+             * @description 实体扩展画像 / 属性
+             */
+            profile?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
          * CreateFeedPostCommentRequest
          * @description 创建动态评论请求
          */
@@ -4327,157 +4723,10 @@ export interface components {
             mentioned_user_ids?: number[] | null;
         };
         /**
-         * CreateStudioAssetGenerationRequest
-         * @description 创建 Studio 资产生成批次请求。
+         * CreateImageGenerationRequest
+         * @description 创建 Creative 图片生成请求（异步入队）。
          */
-        CreateStudioAssetGenerationRequest: {
-            /** @description 图片比例 */
-            aspect_ratio?: components["schemas"]["StudioAspectRatio"] | null;
-            /** @description 图片尺寸：1K / 2K / 4K */
-            image_size?: components["schemas"]["StudioImageSize"] | null;
-            /**
-             * Generate Count
-             * @description 生成数量
-             * @default 1
-             */
-            generate_count: number;
-            /**
-             * Reference Media Urls
-             * @description 参考媒体 object_key 或 public URL 列表
-             */
-            reference_media_urls?: string[];
-            /**
-             * Params
-             * @description 生成扩展参数
-             */
-            params?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Prompt
-             * @description 提示词
-             */
-            prompt: string;
-            /**
-             * Model
-             * @description 图片生成模型 ID
-             */
-            model: string;
-        };
-        /**
-         * CreateStudioAssetRequest
-         * @description 创建 Studio 资产请求。
-         */
-        CreateStudioAssetRequest: {
-            /**
-             * Parent Id
-             * @description 父级资产ID；为空表示创建顶级资产，非空表示创建变体
-             */
-            parent_id?: number | null;
-            /** @description 资产类型；创建顶级资产必填，创建变体时继承父级 */
-            asset_type?: components["schemas"]["StudioAssetType"] | null;
-            /**
-             * Name
-             * @description 资产名称
-             */
-            name?: string | null;
-            /**
-             * Image Urls
-             * @description 初始候选图片 object_key 或 public URL
-             */
-            image_urls?: string[];
-            /**
-             * Selected Image Url
-             * @description 初始选中的当前展示图片
-             */
-            selected_image_url?: string | null;
-            /**
-             * Prompt
-             * @description 初始提示词
-             */
-            prompt?: string | null;
-            /**
-             * Model
-             * @description 初始使用的模型
-             */
-            model?: string | null;
-            /** @description 图片比例 */
-            aspect_ratio?: components["schemas"]["StudioAspectRatio"] | null;
-            /** @description 图片尺寸：1K / 2K / 4K */
-            image_size?: components["schemas"]["StudioImageSize"] | null;
-            /**
-             * Generate Count
-             * @description 生成数量
-             * @default 1
-             */
-            generate_count: number;
-            /**
-             * Reference Media Urls
-             * @description 参考媒体 object_key 或 public URL 列表
-             */
-            reference_media_urls?: string[];
-            /**
-             * Params
-             * @description 生成扩展参数
-             */
-            params?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * CreateStudioClipRequest
-         * @description 创建 Studio 时间线 clip 请求。
-         */
-        CreateStudioClipRequest: {
-            /**
-             * @description clip 创建来源
-             * @default empty
-             */
-            source_type: components["schemas"]["StudioClipSourceType"];
-            /**
-             * Start Sec
-             * @description clip 在项目时间线上的开始秒
-             */
-            start_sec: number;
-            /**
-             * Duration Sec
-             * @description clip 持续秒数，默认 5 秒
-             * @default 5
-             */
-            duration_sec: number | null;
-            /**
-             * Title
-             * @description clip 标题
-             */
-            title?: string | null;
-            /**
-             * Workflow Node Output Id
-             * @description source_type=node_output 时引用的节点产物ID
-             */
-            workflow_node_output_id?: number | null;
-            /** @description source_type=empty 时占位媒体类型，默认 text；source_type=upload 时必填 image/video */
-            media_type?: components["schemas"]["StudioClipMediaType"] | null;
-            /**
-             * Object Key
-             * @description source_type=upload 时上传到 R2 后的 object_key
-             */
-            object_key?: string | null;
-            /**
-             * Source Duration Sec
-             * @description 上传视频源文件时长，图片可不传
-             */
-            source_duration_sec?: number | null;
-            /**
-             * Aspect Ratio
-             * @description 媒体比例，如 16:9 / 9:16 / 1:1
-             */
-            aspect_ratio?: string | null;
-        };
-        /**
-         * CreateStudioImageGenerationRequest
-         * @description 创建 Studio 图片生成请求。
-         */
-        CreateStudioImageGenerationRequest: {
+        CreateImageGenerationRequest: {
             /**
              * Prompt
              * @description 提示词
@@ -4489,9 +4738,9 @@ export interface components {
              */
             model: string;
             /** @description 图片比例 */
-            aspect_ratio?: components["schemas"]["StudioAspectRatio"] | null;
+            aspect_ratio?: components["schemas"]["CreativeAspectRatio"] | null;
             /** @description 图片尺寸：1K / 2K / 4K */
-            image_size?: components["schemas"]["StudioImageSize"] | null;
+            image_size?: components["schemas"]["CreativeImageSize"] | null;
             /**
              * Generate Count
              * @description 生成数量
@@ -4502,7 +4751,7 @@ export interface components {
              * Inputs
              * @description 生成输入列表
              */
-            inputs?: components["schemas"]["StudioAiGenerationInputRequest"][];
+            inputs?: components["schemas"]["NodeInputItem"][];
             /**
              * Params
              * @description 生成扩展参数
@@ -4512,41 +4761,55 @@ export interface components {
             } | null;
         };
         /**
-         * CreateStudioKeyframeRequest
+         * CreateKeyframeRequest
          * @description 创建 Studio 关键帧请求。
+         *
+         *     三种来源：
+         *     - upload     : 用户上传图片，需传 object_url
+         *     - generated  : 来自生成节点产物，需传 source_session_id + source_output_id
+         *     - screenshot : 来自 clip 截图，需传 source_clip_id + source_time_sec
          */
-        CreateStudioKeyframeRequest: {
-            /**
-             * @description 关键帧来源
-             * @default screenshot
-             */
+        CreateKeyframeRequest: {
+            /** @description 关键帧来源 */
             source_type: components["schemas"]["StudioKeyframeSourceType"];
+            /** @description 关键帧用途 */
+            usage_type?: components["schemas"]["StudioKeyframeUsageType"] | null;
             /**
-             * Image Url
-             * @description 关键帧图片 object_key 或 public URL；generated 来源可不传
+             * Title
+             * @description 关键帧标题
              */
-            image_url?: string | null;
+            title?: string | null;
             /**
-             * Source Workflow Id
-             * @description 来源 workflow ID
+             * Object Url
+             * @description 上传场景的 public URL 或 object_key
              */
-            source_workflow_id?: number | null;
+            object_url?: string | null;
+            /**
+             * Source Session Id
+             * @description 生成来源的会话 ID
+             */
+            source_session_id?: number | null;
             /**
              * Source Output Id
-             * @description 来源节点产物 ID
+             * @description 生成来源的节点产物 ID
              */
             source_output_id?: number | null;
             /**
+             * Source Clip Id
+             * @description 截图来源 clip ID
+             */
+            source_clip_id?: number | null;
+            /**
              * Source Time Sec
-             * @description 截图来源视频时间点（秒）
+             * @description 截图来源时间点（秒）
              */
             source_time_sec?: number | null;
         };
         /**
-         * CreateStudioProjectRequest
-         * @description 创建 Studio 项目请求。
+         * CreateProjectRequest
+         * @description 创建 Creative 项目请求。
          */
-        CreateStudioProjectRequest: {
+        CreateProjectRequest: {
             /**
              * Title
              * @description 项目标题
@@ -4558,21 +4821,77 @@ export interface components {
              */
             description?: string | null;
             /**
+             * @description 项目类型
+             * @default studio
+             */
+            project_type: components["schemas"]["CreativeProjectType"];
+            /**
              * Cover Url
-             * @description 项目封面公网 URL 或 object_key
+             * @description 项目封面 public URL 或 object_key（可选）
              */
             cover_url?: string | null;
             /**
              * @description 项目画布比例
              * @default 16:9
              */
-            aspect_ratio: components["schemas"]["StudioAspectRatio"];
+            aspect_ratio: components["schemas"]["CreativeAspectRatio"] | null;
+            /**
+             * Settings
+             * @description 项目扩展配置
+             */
+            settings?: {
+                [key: string]: unknown;
+            } | null;
         };
         /**
-         * CreateStudioTextGenerationRequest
-         * @description 创建 Studio 文本生成请求。
+         * CreateResourceRequest
+         * @description 上传文件创建 Creative 资源（极简）。
+         *
+         *     前端 R2 直传后调用，仅需提供 object_url。后端会从文件扩展名/MIME 自动推断
+         *     resource_type；若推断不准确，可显式传 resource_type 覆盖。
+         *     其余元数据（mime / duration / width / height / aspect_ratio 等）不在创建时
+         *     记录，后续按需在 worker 中补全。
          */
-        CreateStudioTextGenerationRequest: {
+        CreateResourceRequest: {
+            /**
+             * Object Url
+             * @description 文件 public URL 或 object_key
+             */
+            object_url: string;
+            /**
+             * Project Id
+             * @description 所属项目 ID（不传则为用户级资源）
+             */
+            project_id?: number | null;
+            /** @description 资源类型（image/video/audio/document）；不传则从扩展名/MIME 推断 */
+            resource_type?: components["schemas"]["CreativeResourceType"] | null;
+        };
+        /**
+         * CreateSessionRequest
+         * @description 创建 Creative 会话请求。
+         */
+        CreateSessionRequest: {
+            /**
+             * @description 会话类型
+             * @default studio
+             */
+            session_type: components["schemas"]["CreativeSessionType"];
+            /**
+             * Title
+             * @description 会话标题
+             */
+            title?: string | null;
+            /**
+             * Description
+             * @description 会话描述
+             */
+            description?: string | null;
+        };
+        /**
+         * CreateTextGenerationRequest
+         * @description 创建 Creative 文本生成请求（同步）。
+         */
+        CreateTextGenerationRequest: {
             /**
              * Prompt
              * @description 提示词
@@ -4587,7 +4906,7 @@ export interface components {
              * Inputs
              * @description 生成输入列表
              */
-            inputs?: components["schemas"]["StudioAiGenerationInputRequest"][];
+            inputs?: components["schemas"]["NodeInputItem"][];
             /**
              * Params
              * @description 生成扩展参数
@@ -4597,69 +4916,20 @@ export interface components {
             } | null;
         };
         /**
-         * CreateStudioTimelineTrackRequest
+         * CreateTrackRequest
          * @description 创建 Studio 时间线轨道请求。
          */
-        CreateStudioTimelineTrackRequest: {
+        CreateTrackRequest: {
             /**
              * Title
              * @description 轨道标题
              */
             title?: string | null;
-        };
-        /**
-         * CreateStudioVideoGenerationRequest
-         * @description 创建 Studio 视频生成请求。
-         *
-         *     `prompt` 在自定义分镜（`provider_params.input.shot_type=customize`）场景下可省略，
-         *     由 `multi_prompt` 提供分镜级提示词。其它场景必填。
-         */
-        CreateStudioVideoGenerationRequest: {
             /**
-             * Prompt
-             * @description 提示词；自定义分镜场景可省略
+             * @description 轨道类型
+             * @default video
              */
-            prompt?: string | null;
-            /**
-             * Model
-             * @description 模型 ID
-             */
-            model: string;
-            /** @description 视频比例，可灵 v3 仅支持 1:1 / 16:9 / 9:16 */
-            aspect_ratio?: components["schemas"]["StudioAspectRatio"] | null;
-            /**
-             * Duration Sec
-             * @description 视频生成时长（秒），可灵 v3 取值 3~15
-             */
-            duration_sec: number;
-            /**
-             * Inputs
-             * @description 生成输入列表
-             */
-            inputs?: components["schemas"]["StudioAiGenerationInputRequest"][];
-            /**
-             * Params
-             * @description 生成扩展参数
-             */
-            params?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * CreateStudioWorkflowRequest
-         * @description 创建 Studio workflow 请求。
-         */
-        CreateStudioWorkflowRequest: {
-            /**
-             * Title
-             * @description 工作流标题
-             */
-            title?: string | null;
-            /**
-             * Description
-             * @description 工作流描述
-             */
-            description?: string | null;
+            track_type: components["schemas"]["StudioTrackType"];
         };
         /**
          * CreateVideoCommentRequest
@@ -4676,6 +4946,41 @@ export interface components {
              * @description 回复的评论ID（为空表示主评论）
              */
             reply_to_comment_id?: number | null;
+        };
+        /**
+         * CreateVideoGenerationRequest
+         * @description 创建 Creative 视频生成请求（异步入队）。
+         */
+        CreateVideoGenerationRequest: {
+            /**
+             * Prompt
+             * @description 提示词（自定义分镜场景可省略）
+             */
+            prompt?: string | null;
+            /**
+             * Model
+             * @description 模型 ID
+             */
+            model: string;
+            /** @description 视频比例，可灵 v3 仅支持 1:1 / 16:9 / 9:16 */
+            aspect_ratio?: components["schemas"]["CreativeAspectRatio"] | null;
+            /**
+             * Duration Sec
+             * @description 视频生成时长（秒）
+             */
+            duration_sec: number;
+            /**
+             * Inputs
+             * @description 生成输入列表
+             */
+            inputs?: components["schemas"]["NodeInputItem"][];
+            /**
+             * Params
+             * @description 生成扩展参数
+             */
+            params?: {
+                [key: string]: unknown;
+            } | null;
         };
         /**
          * CreateVideoRequest
@@ -4722,6 +5027,96 @@ export interface components {
             tags?: (number | string)[] | null;
         };
         /**
+         * CreativeAiModelKind
+         * @description Creative AI 模型分类。
+         * @enum {string}
+         */
+        CreativeAiModelKind: "text" | "image" | "video";
+        /**
+         * CreativeAspectRatio
+         * @description Creative AI 生成比例。
+         * @enum {string}
+         */
+        CreativeAspectRatio: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "3:2" | "2:3" | "21:9" | "adaptive";
+        /**
+         * CreativeEntityStatus
+         * @description Creative 实体状态。
+         * @enum {string}
+         */
+        CreativeEntityStatus: "processing" | "ready" | "failed";
+        /**
+         * CreativeEntityType
+         * @description Creative 实体类型。
+         * @enum {string}
+         */
+        CreativeEntityType: "character" | "scene" | "prop" | "style";
+        /**
+         * CreativeEntityVersionStatus
+         * @description Creative 实体版本状态。
+         * @enum {string}
+         */
+        CreativeEntityVersionStatus: "pending" | "processing" | "ready" | "failed";
+        /**
+         * CreativeImageSize
+         * @description Creative AI 图片尺寸。
+         * @enum {string}
+         */
+        CreativeImageSize: "1K" | "2K" | "4K";
+        /**
+         * CreativeNodeInputRole
+         * @description Creative 节点输入用途。
+         * @enum {string}
+         */
+        CreativeNodeInputRole: "text" | "image" | "video" | "feature" | "audio" | "first_frame" | "last_frame";
+        /**
+         * CreativeNodeOutputRole
+         * @description Creative 节点输出用途。
+         * @enum {string}
+         */
+        CreativeNodeOutputRole: "result" | "candidate" | "preview" | "mask";
+        /**
+         * CreativeNodeStatus
+         * @description Creative 节点状态。
+         * @enum {string}
+         */
+        CreativeNodeStatus: "pending" | "processing" | "succeeded" | "failed";
+        /**
+         * CreativeNodeType
+         * @description Creative 节点类型。
+         * @enum {string}
+         */
+        CreativeNodeType: "text_generation" | "image_generation" | "video_generation" | "user_input";
+        /**
+         * CreativeProjectType
+         * @description Creative 项目类型。
+         * @enum {string}
+         */
+        CreativeProjectType: "studio" | "script" | "agent" | "tool" | "chat";
+        /**
+         * CreativeResourceSourceType
+         * @description Creative 资源来源类型。
+         * @enum {string}
+         */
+        CreativeResourceSourceType: "upload" | "generated" | "screenshot" | "imported" | "manual";
+        /**
+         * CreativeResourceStatus
+         * @description Creative 资源状态。
+         * @enum {string}
+         */
+        CreativeResourceStatus: "processing" | "ready" | "failed";
+        /**
+         * CreativeResourceType
+         * @description Creative 资源类型。
+         * @enum {string}
+         */
+        CreativeResourceType: "image" | "video" | "audio" | "text" | "document";
+        /**
+         * CreativeSessionType
+         * @description Creative 会话类型。
+         * @enum {string}
+         */
+        CreativeSessionType: "studio" | "script" | "chat" | "agent" | "tool";
+        /**
          * EditorPicksListResponse
          * @description 编辑推荐列表响应（客户端）
          */
@@ -4731,6 +5126,90 @@ export interface components {
              * @description 编辑推荐视频列表，最多 8 条
              */
             items?: components["schemas"]["VideoItemResponse"][];
+        };
+        /**
+         * EntityResponse
+         * @description Creative 实体响应。
+         */
+        EntityResponse: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Parent Id */
+            parent_id?: number | null;
+            entity_type: components["schemas"]["CreativeEntityType"];
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Current Version Id */
+            current_version_id?: number | null;
+            /** Current Image Url */
+            current_image_url?: string | null;
+            /** Profile */
+            profile?: {
+                [key: string]: unknown;
+            } | null;
+            status: components["schemas"]["CreativeEntityStatus"];
+            /**
+             * Children Count
+             * @default 0
+             */
+            children_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+        };
+        /**
+         * EntityVersionResponse
+         * @description Creative 实体版本响应。
+         */
+        EntityVersionResponse: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Entity Id */
+            entity_id: number;
+            /** Resource Id */
+            resource_id?: number | null;
+            /** Session Node Id */
+            session_node_id?: number | null;
+            /** Session Node Output Id */
+            session_node_output_id?: number | null;
+            /** Prompt */
+            prompt?: string | null;
+            /** Model */
+            model?: string | null;
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            } | null;
+            /** Reference Resource Ids */
+            reference_resource_ids?: number[] | null;
+            /** Version Note */
+            version_note?: string | null;
+            /** Object Url */
+            object_url?: string | null;
+            status: components["schemas"]["CreativeEntityVersionStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
         };
         /**
          * FeedPostBountyInfo
@@ -5151,6 +5630,42 @@ export interface components {
             detail?: components["schemas"]["ValidationError"][];
         };
         /**
+         * KeyframeResponse
+         * @description Studio 关键帧响应。
+         */
+        KeyframeResponse: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Resource Id */
+            resource_id: number;
+            source_type: components["schemas"]["StudioKeyframeSourceType"];
+            usage_type?: components["schemas"]["StudioKeyframeUsageType"] | null;
+            /** Title */
+            title?: string | null;
+            /** Source Session Id */
+            source_session_id?: number | null;
+            /** Source Output Id */
+            source_output_id?: number | null;
+            /** Source Clip Id */
+            source_clip_id?: number | null;
+            /** Source Time Sec */
+            source_time_sec?: number | null;
+            /** Image Url */
+            image_url?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+        };
+        /**
          * LastMessageSummary
          * @description 最后一条消息摘要（会话列表/详情用）；已撤回时 content 为空
          */
@@ -5287,7 +5802,7 @@ export interface components {
          * @description 分片上传初始化请求
          */
         MultipartInitRequest: {
-            /** @description 上传用途（仅 video / ai_resource_video） */
+            /** @description 上传用途（仅 video / ai_resource_video / ai_resource_audio） */
             purpose: components["schemas"]["UploadPurpose"];
             /**
              * Filename
@@ -5303,7 +5818,7 @@ export interface components {
              * Content Type
              * @description 文件 MIME 类型，如 video/mp4
              */
-            content_type?: string | null;
+            content_type: string;
         };
         /**
          * MultipartInitResponse
@@ -5396,6 +5911,12 @@ export interface components {
              * @default 0
              */
             balance: number;
+            /**
+             * Is Unlimited Token
+             * @description 是否允许无限 Token 使用（Creative AI 生成白名单）
+             * @default false
+             */
+            is_unlimited_token: boolean;
         };
         /**
          * MyVideosResponse
@@ -5525,6 +6046,200 @@ export interface components {
             items: components["schemas"]["NewsArticleItemResponse"][];
         };
         /**
+         * NodeInputItem
+         * @description 节点输入参数（三选一）。
+         *
+         *     - text_content     : 文字输入（input_role=text）
+         *     - resource_id      : 引用已有资源
+         *     - source_output_id : 引用上游节点产物
+         */
+        NodeInputItem: {
+            /** @description 输入用途 */
+            input_role: components["schemas"]["CreativeNodeInputRole"];
+            /**
+             * Text Content
+             * @description 文字内容（input_role=text 时必填）
+             */
+            text_content?: string | null;
+            /**
+             * Resource Id
+             * @description 资源 ID
+             */
+            resource_id?: number | null;
+            /**
+             * Source Output Id
+             * @description 上游节点产物 ID
+             */
+            source_output_id?: number | null;
+            /**
+             * Sort Order
+             * @description 排序
+             * @default 0
+             */
+            sort_order: number;
+            /**
+             * Params
+             * @description 输入级扩展参数
+             */
+            params?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * NodeInputResponse
+         * @description Creative 节点输入响应。
+         */
+        NodeInputResponse: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Node Id */
+            node_id: number;
+            /** Resource Id */
+            resource_id?: number | null;
+            /** Source Output Id */
+            source_output_id?: number | null;
+            input_role: components["schemas"]["CreativeNodeInputRole"];
+            /** Text Content */
+            text_content?: string | null;
+            /** Object Url */
+            object_url?: string | null;
+            /** Sort Order */
+            sort_order: number;
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+        };
+        /**
+         * NodeOutputResponse
+         * @description Creative 节点输出响应。
+         */
+        NodeOutputResponse: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Node Id */
+            node_id: number;
+            /** Resource Id */
+            resource_id: number;
+            output_role: components["schemas"]["CreativeNodeOutputRole"];
+            /** Sort Order */
+            sort_order: number;
+            resource_type?: components["schemas"]["CreativeResourceType"] | null;
+            /** Object Url */
+            object_url?: string | null;
+            /** Text Content */
+            text_content?: string | null;
+            /** Duration Sec */
+            duration_sec?: number | null;
+            /** Aspect Ratio */
+            aspect_ratio?: string | null;
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+        };
+        /**
+         * NodeResponse
+         * @description Creative 节点响应（含 inputs/outputs）。
+         */
+        NodeResponse: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Session Id */
+            session_id: number;
+            node_type: components["schemas"]["CreativeNodeType"];
+            status: components["schemas"]["CreativeNodeStatus"];
+            /** Prompt */
+            prompt?: string | null;
+            /** Model */
+            model?: string | null;
+            /** Generate Count */
+            generate_count: number;
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            } | null;
+            /** Error Message */
+            error_message?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Completed At */
+            completed_at?: string | null;
+            /**
+             * Inputs
+             * @description 节点输入列表
+             */
+            inputs?: components["schemas"]["NodeInputResponse"][];
+            /**
+             * Outputs
+             * @description 节点输出列表
+             */
+            outputs?: components["schemas"]["NodeOutputResponse"][];
+            /**
+             * Resource Id
+             * @description 节点直接绑定的资源 ID（user_input 等无 input/output 场景）
+             */
+            resource_id?: number | null;
+            /** @description 直接绑定资源的类型（与 resource_id 对应） */
+            resource_type?: components["schemas"]["CreativeResourceType"] | null;
+            /**
+             * Object Url
+             * @description 直接绑定资源的公网 URL
+             */
+            object_url?: string | null;
+            /**
+             * Text Content
+             * @description 直接绑定资源的文本内容（text 类型资源）
+             */
+            text_content?: string | null;
+            /**
+             * Duration Sec
+             * @description 直接绑定资源的时长（video/audio）
+             */
+            duration_sec?: number | null;
+            /**
+             * Aspect Ratio
+             * @description 直接绑定资源的比例
+             */
+            aspect_ratio?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+        };
+        /**
          * NotificationItemResponse
          * @description 单条互动通知响应
          */
@@ -5644,6 +6359,39 @@ export interface components {
             /** Size */
             size: number;
         };
+        /** PageData[EntityResponse] */
+        PageData_EntityResponse_: {
+            /** Items */
+            items: components["schemas"]["EntityResponse"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Size */
+            size: number;
+        };
+        /** PageData[EntityVersionResponse] */
+        PageData_EntityVersionResponse_: {
+            /** Items */
+            items: components["schemas"]["EntityVersionResponse"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Size */
+            size: number;
+        };
+        /** PageData[KeyframeResponse] */
+        PageData_KeyframeResponse_: {
+            /** Items */
+            items: components["schemas"]["KeyframeResponse"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Size */
+            size: number;
+        };
         /** PageData[MessageItemResponse] */
         PageData_MessageItemResponse_: {
             /** Items */
@@ -5655,10 +6403,10 @@ export interface components {
             /** Size */
             size: number;
         };
-        /** PageData[StudioAssetHistoryResponse] */
-        PageData_StudioAssetHistoryResponse_: {
+        /** PageData[NodeResponse] */
+        PageData_NodeResponse_: {
             /** Items */
-            items: components["schemas"]["StudioAssetHistoryResponse"][];
+            items: components["schemas"]["NodeResponse"][];
             /** Total */
             total: number;
             /** Page */
@@ -5666,10 +6414,10 @@ export interface components {
             /** Size */
             size: number;
         };
-        /** PageData[StudioAssetResponse] */
-        PageData_StudioAssetResponse_: {
+        /** PageData[ProjectResponse] */
+        PageData_ProjectResponse_: {
             /** Items */
-            items: components["schemas"]["StudioAssetResponse"][];
+            items: components["schemas"]["ProjectResponse"][];
             /** Total */
             total: number;
             /** Page */
@@ -5677,10 +6425,10 @@ export interface components {
             /** Size */
             size: number;
         };
-        /** PageData[StudioKeyframeResponse] */
-        PageData_StudioKeyframeResponse_: {
+        /** PageData[ResourceListItem] */
+        PageData_ResourceListItem_: {
             /** Items */
-            items: components["schemas"]["StudioKeyframeResponse"][];
+            items: components["schemas"]["ResourceListItem"][];
             /** Total */
             total: number;
             /** Page */
@@ -5688,32 +6436,10 @@ export interface components {
             /** Size */
             size: number;
         };
-        /** PageData[StudioProjectResponse] */
-        PageData_StudioProjectResponse_: {
+        /** PageData[SessionResponse] */
+        PageData_SessionResponse_: {
             /** Items */
-            items: components["schemas"]["StudioProjectResponse"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Size */
-            size: number;
-        };
-        /** PageData[StudioWorkflowNodeResponse] */
-        PageData_StudioWorkflowNodeResponse_: {
-            /** Items */
-            items: components["schemas"]["StudioWorkflowNodeResponse"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Size */
-            size: number;
-        };
-        /** PageData[StudioWorkflowResponse] */
-        PageData_StudioWorkflowResponse_: {
-            /** Items */
-            items: components["schemas"]["StudioWorkflowResponse"][];
+            items: components["schemas"]["SessionResponse"][];
             /** Total */
             total: number;
             /** Page */
@@ -5731,6 +6457,41 @@ export interface components {
             page: number;
             /** Size */
             size: number;
+        };
+        /**
+         * ProjectResponse
+         * @description Creative 项目响应。
+         */
+        ProjectResponse: {
+            /** Id */
+            id: number;
+            /** User Id */
+            user_id: number;
+            project_type: components["schemas"]["CreativeProjectType"];
+            /** Title */
+            title: string;
+            /** Description */
+            description?: string | null;
+            /** Cover Resource Id */
+            cover_resource_id?: number | null;
+            /** Cover Url */
+            cover_url?: string | null;
+            /** Aspect Ratio */
+            aspect_ratio?: string | null;
+            /** Settings */
+            settings?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
         };
         /**
          * RecommendedAuthorItemResponse
@@ -5768,26 +6529,105 @@ export interface components {
             items: components["schemas"]["RecommendedAuthorItemResponse"][];
         };
         /**
+         * ResourceListItem
+         * @description Creative 资源列表项（不含 text_content）。
+         */
+        ResourceListItem: {
+            /** Id */
+            id: number;
+            /** User Id */
+            user_id: number;
+            /** Project Id */
+            project_id?: number | null;
+            resource_type: components["schemas"]["CreativeResourceType"];
+            source_type: components["schemas"]["CreativeResourceSourceType"];
+            /** Title */
+            title?: string | null;
+            /** Object Url */
+            object_url?: string | null;
+            /** Mime Type */
+            mime_type?: string | null;
+            /** Duration Sec */
+            duration_sec?: number | null;
+            /** Width */
+            width?: number | null;
+            /** Height */
+            height?: number | null;
+            /** Aspect Ratio */
+            aspect_ratio?: string | null;
+            status: components["schemas"]["CreativeResourceStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+        };
+        /**
+         * ResourceResponse
+         * @description Creative 资源详情响应。
+         */
+        ResourceResponse: {
+            /** Id */
+            id: number;
+            /** User Id */
+            user_id: number;
+            /** Project Id */
+            project_id?: number | null;
+            resource_type: components["schemas"]["CreativeResourceType"];
+            source_type: components["schemas"]["CreativeResourceSourceType"];
+            /** Title */
+            title?: string | null;
+            /** Object Url */
+            object_url?: string | null;
+            /** Text Content */
+            text_content?: string | null;
+            /** Mime Type */
+            mime_type?: string | null;
+            /** Duration Sec */
+            duration_sec?: number | null;
+            /** Width */
+            width?: number | null;
+            /** Height */
+            height?: number | null;
+            /** Aspect Ratio */
+            aspect_ratio?: string | null;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            status: components["schemas"]["CreativeResourceStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+        };
+        /**
          * SearchScope
          * @description 关键字搜索的资源范围
          * @enum {string}
          */
         SearchScope: "feed" | "video" | "user";
         /**
-         * SelectStudioAssetImageRequest
-         * @description 选择 Studio 资产当前展示图片请求。
+         * SelectEntityVersionRequest
+         * @description 切换实体当前展示版本请求。
          */
-        SelectStudioAssetImageRequest: {
+        SelectEntityVersionRequest: {
             /**
-             * History Id
-             * @description 资产历史ID
+             * Version Id
+             * @description 目标版本 ID
              */
-            history_id: number;
-            /**
-             * Image Url
-             * @description 要设为当前展示图的 object_key 或 public URL
-             */
-            image_url: string;
+            version_id: number;
         };
         /**
          * SendMessageRequest
@@ -5823,577 +6663,15 @@ export interface components {
             scene: components["schemas"]["VerificationScene"];
         };
         /**
-         * StreamStatus
-         * @description Cloudflare Stream 转码状态
-         * @enum {string}
+         * SessionResponse
+         * @description Creative 会话响应。
          */
-        StreamStatus: "pending" | "ready" | "error";
-        /**
-         * StudioAiGenerationInputRequest
-         * @description Studio AI 生成输入。
-         */
-        StudioAiGenerationInputRequest: {
-            /** @description 输入来源类型 */
-            source_type: components["schemas"]["StudioWorkflowNodeInputSourceType"];
-            /** @description 输入用途 */
-            input_role: components["schemas"]["StudioWorkflowNodeInputRole"];
-            /** @description 输入媒体类型 */
-            media_type: components["schemas"]["StudioClipMediaType"];
-            /**
-             * Object Key
-             * @description source_type=upload 时的 R2 object_key 或 public URL
-             */
-            object_key?: string | null;
-            /**
-             * Source Output Id
-             * @description source_type=node_output 时引用的输出 ID
-             */
-            source_output_id?: number | null;
-            /**
-             * Asset Id
-             * @description source_type=asset 时引用的资产 ID
-             */
-            asset_id?: number | null;
-            /**
-             * Keyframe Id
-             * @description source_type=keyframe 时引用的关键帧 ID
-             */
-            keyframe_id?: number | null;
-            /**
-             * Sort Order
-             * @description 同一输入用途下的排序
-             * @default 0
-             */
-            sort_order: number;
-            /**
-             * Params
-             * @description 输入级扩展参数
-             */
-            params?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * StudioAiModelInfo
-         * @description Studio AI 模型信息。
-         */
-        StudioAiModelInfo: {
-            /**
-             * Id
-             * @description 模型 ID
-             */
-            id: string;
-            /**
-             * Name
-             * @description 模型展示名
-             */
-            name: string;
-            /** @description 支持的生成类型 */
-            operation_type: components["schemas"]["StudioAiOperationType"];
-            /**
-             * Supported Aspect Ratios
-             * @description 支持的比例
-             */
-            supported_aspect_ratios?: components["schemas"]["StudioAspectRatio"][];
-            /**
-             * Supported Image Sizes
-             * @description 支持的图片尺寸
-             */
-            supported_image_sizes?: components["schemas"]["StudioImageSize"][];
-            /**
-             * Supported Durations
-             * @description 支持的视频时长（秒），可灵 v3 接受 3~15 任意整数
-             */
-            supported_durations?: number[];
-        };
-        /**
-         * StudioAiModelListResponse
-         * @description Studio AI 模型列表响应。
-         */
-        StudioAiModelListResponse: {
-            /**
-             * Language Models
-             * @description 语言模型
-             */
-            language_models?: components["schemas"]["StudioAiModelInfo"][];
-            /**
-             * Image Models
-             * @description 图片生成模型
-             */
-            image_models?: components["schemas"]["StudioAiModelInfo"][];
-            /**
-             * Video Models
-             * @description 视频生成模型
-             */
-            video_models?: components["schemas"]["StudioAiModelInfo"][];
-        };
-        /**
-         * StudioAiOperationType
-         * @description Studio AI 生成类型。
-         * @enum {string}
-         */
-        StudioAiOperationType: "text" | "image" | "video";
-        /**
-         * StudioAspectRatio
-         * @description Studio AI 生成比例。
-         * @enum {string}
-         */
-        StudioAspectRatio: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "3:2" | "2:3" | "21:9";
-        /**
-         * StudioAssetHistoryOperationType
-         * @description Studio 资产历史操作类型。
-         * @enum {string}
-         */
-        StudioAssetHistoryOperationType: "image" | "upload";
-        /**
-         * StudioAssetHistoryResponse
-         * @description Studio 资产历史响应。
-         */
-        StudioAssetHistoryResponse: {
+        SessionResponse: {
             /** Id */
             id: number;
             /** Project Id */
             project_id: number;
-            /** Asset Id */
-            asset_id: number;
-            operation_type: components["schemas"]["StudioAssetHistoryOperationType"];
-            /** Prompt */
-            prompt?: string | null;
-            /** Reference Media Urls */
-            reference_media_urls?: (string | null)[];
-            /** Model */
-            model?: string | null;
-            /** Aspect Ratio */
-            aspect_ratio?: string | null;
-            /** Image Size */
-            image_size?: string | null;
-            /** Generate Count */
-            generate_count: number;
-            /** Image Urls */
-            image_urls?: (string | null)[];
-            status: components["schemas"]["StudioAssetHistoryStatus"];
-            /** Error Message */
-            error_message?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioAssetHistoryStatus
-         * @description Studio 资产历史状态。
-         * @enum {string}
-         */
-        StudioAssetHistoryStatus: "pending" | "processing" | "succeeded" | "failed";
-        /**
-         * StudioAssetResponse
-         * @description Studio 资产响应。
-         */
-        StudioAssetResponse: {
-            /** Id */
-            id: number;
-            /** Project Id */
-            project_id: number;
-            /** Parent Id */
-            parent_id?: number | null;
-            /** Current History Id */
-            current_history_id?: number | null;
-            asset_type: components["schemas"]["StudioAssetType"];
-            /** Name */
-            name?: string | null;
-            /** Image Url */
-            image_url?: string | null;
-            /** Prompt */
-            prompt?: string | null;
-            /** Reference Media Urls */
-            reference_media_urls?: (string | null)[];
-            /** Model */
-            model?: string | null;
-            status: components["schemas"]["StudioAssetStatus"];
-            /**
-             * Children Count
-             * @default 0
-             */
-            children_count: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioAssetStatus
-         * @description Studio 资产状态。
-         * @enum {string}
-         */
-        StudioAssetStatus: "processing" | "ready" | "failed";
-        /**
-         * StudioAssetType
-         * @description Studio 资产类型。
-         * @enum {string}
-         */
-        StudioAssetType: "character" | "scene" | "prop";
-        /**
-         * StudioClipMediaType
-         * @description Studio clip 媒体类型。
-         * @enum {string}
-         */
-        StudioClipMediaType: "text" | "image" | "video";
-        /**
-         * StudioClipResponse
-         * @description Studio 时间线 clip 响应。
-         */
-        StudioClipResponse: {
-            /** Id */
-            id: number;
-            /** Project Id */
-            project_id: number;
-            /** Track Id */
-            track_id: number;
-            /** Workflow Id */
-            workflow_id: number;
-            /** Workflow Node Id */
-            workflow_node_id?: number | null;
-            /** Workflow Node Output Id */
-            workflow_node_output_id?: number | null;
-            /** Title */
-            title?: string | null;
-            /** Media Type */
-            media_type: string;
-            /** Text Content */
-            text_content?: string | null;
-            /** Media Url */
-            media_url?: string | null;
-            /** Source Duration Sec */
-            source_duration_sec?: number | null;
-            /** Aspect Ratio */
-            aspect_ratio?: string | null;
-            /** Status */
-            status: string;
-            /** Start Sec */
-            start_sec: number;
-            /** End Sec */
-            end_sec: number;
-            /** Duration Sec */
-            duration_sec: number;
-            /** Media Start Sec */
-            media_start_sec: number;
-            /** Media End Sec */
-            media_end_sec?: number | null;
-            /** Transform */
-            transform?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioClipSourceType
-         * @description Studio clip 创建来源。
-         * @enum {string}
-         */
-        StudioClipSourceType: "empty" | "node_output" | "upload";
-        /**
-         * StudioClipStatus
-         * @description Studio clip 状态。
-         * @enum {string}
-         */
-        StudioClipStatus: "active" | "disabled" | "hidden";
-        /**
-         * StudioImageSize
-         * @description Studio AI 图片尺寸。
-         * @enum {string}
-         */
-        StudioImageSize: "1K" | "2K" | "4K";
-        /**
-         * StudioKeyframeResponse
-         * @description Studio 关键帧响应。
-         */
-        StudioKeyframeResponse: {
-            /** Id */
-            id: number;
-            /** Project Id */
-            project_id: number;
-            source_type: components["schemas"]["StudioKeyframeSourceType"];
-            /** Source Workflow Id */
-            source_workflow_id?: number | null;
-            /** Source Output Id */
-            source_output_id?: number | null;
-            /** Source Time Sec */
-            source_time_sec?: number | null;
-            /** Image Url */
-            image_url: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioKeyframeSourceType
-         * @description Studio 关键帧来源类型。
-         * @enum {string}
-         */
-        StudioKeyframeSourceType: "generated" | "upload" | "screenshot";
-        /**
-         * StudioProjectResponse
-         * @description Studio 项目响应。
-         */
-        StudioProjectResponse: {
-            /** Id */
-            id: number;
-            /** Title */
-            title: string;
-            /** Description */
-            description?: string | null;
-            /** Cover Url */
-            cover_url?: string | null;
-            /** Aspect Ratio */
-            aspect_ratio: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioTimelineTrackResponse
-         * @description Studio 时间线轨道响应。
-         */
-        StudioTimelineTrackResponse: {
-            /** Id */
-            id: number;
-            /** Project Id */
-            project_id: number;
-            /** Title */
-            title?: string | null;
-            /** Sort Order */
-            sort_order: number;
-            /** Is Muted */
-            is_muted: boolean;
-            /** Is Locked */
-            is_locked: boolean;
-            /**
-             * Clips
-             * @description 轨道下的 clip 列表
-             */
-            clips?: components["schemas"]["StudioClipResponse"][];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioWorkflowNodeInputResponse
-         * @description Studio workflow node input 响应。
-         */
-        StudioWorkflowNodeInputResponse: {
-            /** Id */
-            id: number;
-            /** Project Id */
-            project_id: number;
-            /** Node Id */
-            node_id: number;
-            /** Source Output Id */
-            source_output_id?: number | null;
-            /** Asset Id */
-            asset_id?: number | null;
-            /** Keyframe Id */
-            keyframe_id?: number | null;
-            source_type: components["schemas"]["StudioWorkflowNodeInputSourceType"];
-            input_role: components["schemas"]["StudioWorkflowNodeInputRole"];
-            media_type: components["schemas"]["StudioClipMediaType"];
-            /** Object Url */
-            object_url?: string | null;
-            /** Sort Order */
-            sort_order: number;
-            /** Params */
-            params?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioWorkflowNodeInputRole
-         * @description Studio workflow node input 用途。
-         *
-         *     可灵 v3-omni 视频生成需要区分多种媒体角色：
-         *     - `IMAGE` / `VIDEO`：通用参考媒体（旧字段，IMAGE 在视频生成时按 `refer` 处理）
-         *     - `FIRST_FRAME` / `LAST_FRAME`：首/尾帧（图生视频）
-         *     - `REFER`：参考图（参考生视频）
-         *     - `BASE`：待编辑视频（视频编辑）
-         *     - `FEATURE`：特征参考视频（参考生视频 type=feature）
-         * @enum {string}
-         */
-        StudioWorkflowNodeInputRole: "text" | "image" | "video" | "first_frame" | "last_frame" | "refer" | "base" | "feature";
-        /**
-         * StudioWorkflowNodeInputSourceType
-         * @description Studio workflow node input 来源类型。
-         * @enum {string}
-         */
-        StudioWorkflowNodeInputSourceType: "upload" | "node_output" | "asset" | "keyframe";
-        /**
-         * StudioWorkflowNodeOperationType
-         * @description Studio workflow node 操作类型。
-         * @enum {string}
-         */
-        StudioWorkflowNodeOperationType: "text" | "image" | "video" | "upload";
-        /**
-         * StudioWorkflowNodeOutputResponse
-         * @description Studio workflow node output 响应。
-         */
-        StudioWorkflowNodeOutputResponse: {
-            /** Id */
-            id: number;
-            /** Project Id */
-            project_id: number;
-            /** Node Id */
-            node_id: number;
-            output_type: components["schemas"]["StudioWorkflowNodeOutputType"];
-            /** Text Content */
-            text_content?: string | null;
-            /** Object Url */
-            object_url?: string | null;
-            /** Sort Order */
-            sort_order: number;
-            /** Duration Sec */
-            duration_sec?: number | null;
-            /** Aspect Ratio */
-            aspect_ratio?: string | null;
-            /** Image Size */
-            image_size?: string | null;
-            /** Metadata */
-            metadata?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioWorkflowNodeOutputType
-         * @description Studio workflow node output 类型。
-         * @enum {string}
-         */
-        StudioWorkflowNodeOutputType: "text" | "image" | "video";
-        /**
-         * StudioWorkflowNodeResponse
-         * @description Studio workflow node 响应，内嵌 inputs/outputs。
-         */
-        StudioWorkflowNodeResponse: {
-            /** Id */
-            id: number;
-            /** Project Id */
-            project_id: number;
-            /** Workflow Id */
-            workflow_id: number;
-            operation_type: components["schemas"]["StudioWorkflowNodeOperationType"];
-            status: components["schemas"]["StudioWorkflowNodeStatus"];
-            /** Prompt */
-            prompt?: string | null;
-            /** Model */
-            model?: string | null;
-            /** Aspect Ratio */
-            aspect_ratio?: string | null;
-            /** Image Size */
-            image_size?: string | null;
-            /** Duration Sec */
-            duration_sec?: number | null;
-            /** Generate Count */
-            generate_count: number;
-            /** Params */
-            params?: {
-                [key: string]: unknown;
-            } | null;
-            /** Error Message */
-            error_message?: string | null;
-            /**
-             * Inputs
-             * @description 节点输入列表
-             */
-            inputs?: components["schemas"]["StudioWorkflowNodeInputResponse"][];
-            /**
-             * Outputs
-             * @description 节点输出列表
-             */
-            outputs?: components["schemas"]["StudioWorkflowNodeOutputResponse"][];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Modified At
-             * Format: date-time
-             */
-            modified_at: string;
-        };
-        /**
-         * StudioWorkflowNodeStatus
-         * @description Studio workflow node 状态。
-         * @enum {string}
-         */
-        StudioWorkflowNodeStatus: "pending" | "processing" | "succeeded" | "failed";
-        /**
-         * StudioWorkflowResponse
-         * @description Studio workflow 基本信息响应。
-         */
-        StudioWorkflowResponse: {
-            /** Id */
-            id: number;
-            /** Project Id */
-            project_id: number;
+            session_type: components["schemas"]["CreativeSessionType"];
             /** Title */
             title?: string | null;
             /** Description */
@@ -6419,6 +6697,42 @@ export interface components {
              */
             modified_at: string;
         };
+        /**
+         * StreamStatus
+         * @description Cloudflare Stream 转码状态
+         * @enum {string}
+         */
+        StreamStatus: "pending" | "ready" | "error";
+        /**
+         * StudioClipStatus
+         * @description Studio 时间线 clip 状态。
+         * @enum {string}
+         */
+        StudioClipStatus: "active" | "disabled" | "hidden";
+        /**
+         * StudioClipType
+         * @description Studio 时间线 clip 媒体类型。
+         * @enum {string}
+         */
+        StudioClipType: "image" | "video" | "audio" | "text";
+        /**
+         * StudioKeyframeSourceType
+         * @description Studio 关键帧来源类型。
+         * @enum {string}
+         */
+        StudioKeyframeSourceType: "upload" | "generated" | "screenshot";
+        /**
+         * StudioKeyframeUsageType
+         * @description Studio 关键帧用途类型。
+         * @enum {string}
+         */
+        StudioKeyframeUsageType: "first_frame" | "last_frame" | "reference" | "thumbnail";
+        /**
+         * StudioTrackType
+         * @description Studio 时间线轨道类型。
+         * @enum {string}
+         */
+        StudioTrackType: "video" | "audio";
         /**
          * SystemNotificationItemResponse
          * @description 单条系统通知（公告）响应
@@ -6554,6 +6868,46 @@ export interface components {
              * @default false
              */
             is_invited: boolean;
+            /**
+             * Is Unlimited Token
+             * @description 是否允许无限 Token 使用（Creative AI 生成白名单）
+             * @default false
+             */
+            is_unlimited_token: boolean;
+        };
+        /**
+         * TrackResponse
+         * @description Studio 时间线轨道响应（含 clips）。
+         */
+        TrackResponse: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Title */
+            title?: string | null;
+            track_type: components["schemas"]["StudioTrackType"];
+            /** Sort Order */
+            sort_order: number;
+            /** Is Muted */
+            is_muted: boolean;
+            /** Is Locked */
+            is_locked: boolean;
+            /**
+             * Clips
+             * @description 轨道下未删除的 clip 列表
+             */
+            clips?: components["schemas"]["ClipResponse"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
         };
         /**
          * UnreadCountResponse
@@ -6619,56 +6973,34 @@ export interface components {
             total_price?: number | null;
         };
         /**
-         * UpdateProfileRequest
-         * @description Update profile (all fields optional, only submit fields to modify)
+         * UpdateClipContentRequest
+         * @description 更新 Studio clip 内容来源请求（绑定 session node output 或 resource）。
          */
-        UpdateProfileRequest: {
-            /** Nickname */
-            nickname?: string | null;
-            /** Avatar Url */
-            avatar_url?: string | null;
-            /** Bio */
-            bio?: string | null;
-            /** Background Url */
-            background_url?: string | null;
-        };
-        /**
-         * UpdateStudioAssetRequest
-         * @description 修改 Studio 资产基础信息请求（仅提交要修改的字段）。
-         */
-        UpdateStudioAssetRequest: {
+        UpdateClipContentRequest: {
             /**
-             * Name
-             * @description 资产名称
+             * Session Node Output Id
+             * @description 绑定到 clip 的节点产物 ID
              */
-            name?: string | null;
-            /** @description 资产类型；仅顶级资产可修改 */
-            asset_type?: components["schemas"]["StudioAssetType"] | null;
-        };
-        /**
-         * UpdateStudioClipContentRequest
-         * @description 修改 Studio clip 内容来源请求（仅绑定 node output，不改标题）。
-         */
-        UpdateStudioClipContentRequest: {
+            session_node_output_id?: number | null;
             /**
-             * Workflow Node Output Id
-             * @description 要绑定到 clip 的工作流节点产物ID
+             * Resource Id
+             * @description 绑定到 clip 的资源 ID
              */
-            workflow_node_output_id: number;
+            resource_id?: number | null;
         };
         /**
-         * UpdateStudioClipRequest
-         * @description 修改 Studio clip 时间线、展示属性或手动文本内容请求。
+         * UpdateClipRequest
+         * @description 修改 Studio clip 时间线 / 展示属性请求。
          */
-        UpdateStudioClipRequest: {
+        UpdateClipRequest: {
             /**
              * Track Id
-             * @description 目标轨道ID
+             * @description 目标轨道 ID
              */
             track_id?: number | null;
             /**
              * Start Sec
-             * @description clip 在项目时间线上的开始秒
+             * @description clip 开始秒
              */
             start_sec?: number | null;
             /**
@@ -6702,15 +7034,54 @@ export interface components {
             status?: components["schemas"]["StudioClipStatus"] | null;
             /**
              * Text Content
-             * @description 手动编辑的文本内容；传入后 clip 变为 text 类型并同步到关联 workflow node output
+             * @description 手动编辑的文本内容（clip_type=text 时）
              */
             text_content?: string | null;
         };
         /**
-         * UpdateStudioProjectRequest
-         * @description 修改 Studio 项目请求（仅提交要修改的字段）。
+         * UpdateEntityRequest
+         * @description 修改 Creative 实体基础信息请求。
          */
-        UpdateStudioProjectRequest: {
+        UpdateEntityRequest: {
+            /**
+             * Name
+             * @description 实体名称
+             */
+            name?: string | null;
+            /**
+             * Description
+             * @description 实体描述
+             */
+            description?: string | null;
+            /** @description 实体类型；仅主体可修改 */
+            entity_type?: components["schemas"]["CreativeEntityType"] | null;
+            /**
+             * Profile
+             * @description 实体扩展画像
+             */
+            profile?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * UpdateProfileRequest
+         * @description Update profile (all fields optional, only submit fields to modify)
+         */
+        UpdateProfileRequest: {
+            /** Nickname */
+            nickname?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /** Bio */
+            bio?: string | null;
+            /** Background Url */
+            background_url?: string | null;
+        };
+        /**
+         * UpdateProjectRequest
+         * @description 修改 Creative 项目请求（仅提交要修改的字段）。
+         */
+        UpdateProjectRequest: {
             /**
              * Title
              * @description 项目标题
@@ -6722,18 +7093,41 @@ export interface components {
              */
             description?: string | null;
             /**
-             * Cover Url
-             * @description 项目封面公网 URL 或 object_key
+             * Cover Resource Id
+             * @description 项目封面资源 ID（来自 CreativeResource，可清空：传 0 表示置空）
              */
-            cover_url?: string | null;
+            cover_resource_id?: number | null;
             /** @description 项目画布比例 */
-            aspect_ratio?: components["schemas"]["StudioAspectRatio"] | null;
+            aspect_ratio?: components["schemas"]["CreativeAspectRatio"] | null;
+            /**
+             * Settings
+             * @description 项目扩展配置
+             */
+            settings?: {
+                [key: string]: unknown;
+            } | null;
         };
         /**
-         * UpdateStudioTimelineTrackRequest
+         * UpdateSessionRequest
+         * @description 修改 Creative 会话请求（仅提交要修改的字段）。
+         */
+        UpdateSessionRequest: {
+            /**
+             * Title
+             * @description 会话标题
+             */
+            title?: string | null;
+            /**
+             * Description
+             * @description 会话描述
+             */
+            description?: string | null;
+        };
+        /**
+         * UpdateTrackRequest
          * @description 修改 Studio 时间线轨道请求（仅提交要修改的字段）。
          */
-        UpdateStudioTimelineTrackRequest: {
+        UpdateTrackRequest: {
             /**
              * Title
              * @description 轨道标题
@@ -6754,22 +7148,6 @@ export interface components {
              * @description 是否锁定
              */
             is_locked?: boolean | null;
-        };
-        /**
-         * UpdateStudioWorkflowRequest
-         * @description 修改 Studio workflow 请求（仅提交要修改的字段）。
-         */
-        UpdateStudioWorkflowRequest: {
-            /**
-             * Title
-             * @description 工作流标题
-             */
-            title?: string | null;
-            /**
-             * Description
-             * @description 工作流描述
-             */
-            description?: string | null;
         };
         /**
          * UpdateVideoRequest
@@ -6819,7 +7197,7 @@ export interface components {
          * @description 上传用途枚举
          * @enum {string}
          */
-        UploadPurpose: "user_avatar" | "user_background" | "video_cover" | "video" | "studio_project_cover" | "ai_resource_image" | "ai_resource_video";
+        UploadPurpose: "user_avatar" | "user_background" | "video_cover" | "video" | "studio_project_cover" | "ai_resource_image" | "ai_resource_video" | "ai_resource_audio" | "ai_resource_document";
         /**
          * UploadUrlRequest
          * @description 获取上传预签名 URL 的请求体
@@ -6836,7 +7214,7 @@ export interface components {
              * Content Type
              * @description 文件 MIME 类型，如 image/png
              */
-            content_type?: string | null;
+            content_type: string;
         };
         /**
          * UploadUrlResponse
@@ -10176,7 +10554,39 @@ export interface operations {
             };
         };
     };
-    list_projects_api_v1_studio_projects_get: {
+    list_ai_models_api_v1_creative_ai_models_get: {
+        parameters: {
+            query?: {
+                /** @description 模型分类：text/image/video */
+                type?: components["schemas"]["CreativeAiModelKind"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_AiModelListResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_projects_api_v1_creative_projects_get: {
         parameters: {
             query?: {
                 /** @description 页码 */
@@ -10196,7 +10606,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_PageData_StudioProjectResponse__"];
+                    "application/json": components["schemas"]["BaseResponse_PageData_ProjectResponse__"];
                 };
             };
             /** @description Validation Error */
@@ -10210,7 +10620,7 @@ export interface operations {
             };
         };
     };
-    create_project_api_v1_studio_projects_post: {
+    create_project_api_v1_creative_projects_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -10219,7 +10629,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateStudioProjectRequest"];
+                "application/json": components["schemas"]["CreateProjectRequest"];
             };
         };
         responses: {
@@ -10229,7 +10639,1060 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioProjectResponse_"];
+                    "application/json": components["schemas"]["BaseResponse_ProjectResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_project_detail_api_v1_creative_projects__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_ProjectResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_project_api_v1_creative_projects__project_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProjectRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_ProjectResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_project_api_v1_creative_projects__project_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_user_resources_api_v1_creative_resources_get: {
+        parameters: {
+            query?: {
+                /** @description 资源类型过滤 */
+                type?: components["schemas"]["CreativeResourceType"] | null;
+                /** @description 页码 */
+                page?: number;
+                /** @description 每页条数 */
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_PageData_ResourceListItem__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_resource_api_v1_creative_resources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateResourceRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_ResourceResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_project_resources_api_v1_creative_projects__project_id__resources_get: {
+        parameters: {
+            query?: {
+                /** @description 资源类型过滤 */
+                type?: components["schemas"]["CreativeResourceType"] | null;
+                /** @description 页码 */
+                page?: number;
+                /** @description 每页条数 */
+                size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_PageData_ResourceListItem__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_resource_detail_api_v1_creative_resources__resource_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 资源ID */
+                resource_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_ResourceResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sessions_api_v1_creative_projects__project_id__sessions_get: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                page?: number;
+                /** @description 每页条数 */
+                size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_PageData_SessionResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_session_api_v1_creative_projects__project_id__sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_SessionResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_detail_api_v1_creative_projects__project_id__sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_SessionResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_session_api_v1_creative_projects__project_id__sessions__session_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_SessionResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_session_api_v1_creative_projects__project_id__sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_session_nodes_api_v1_creative_projects__project_id__sessions__session_id__nodes_get: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                page?: number;
+                /** @description 每页条数 */
+                size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_PageData_NodeResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_node_detail_api_v1_creative_projects__project_id__sessions__session_id__nodes__node_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+                /** @description 节点ID */
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NodeResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_node_api_v1_creative_projects__project_id__sessions__session_id__nodes__node_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+                /** @description 节点ID */
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_text_generation_api_v1_creative_projects__project_id__sessions__session_id__text_generations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTextGenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NodeResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_image_generation_api_v1_creative_projects__project_id__sessions__session_id__image_generations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateImageGenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NodeResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_video_generation_api_v1_creative_projects__project_id__sessions__session_id__video_generations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateVideoGenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NodeResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_node_api_v1_creative_projects__project_id__sessions__session_id__nodes__node_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+                /** @description 节点ID */
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NodeResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_entities_api_v1_creative_projects__project_id__entities_get: {
+        parameters: {
+            query?: {
+                /** @description 实体类型过滤 */
+                type?: components["schemas"]["CreativeEntityType"] | null;
+                /** @description 页码 */
+                page?: number;
+                /** @description 每页条数 */
+                size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_PageData_EntityResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_entity_api_v1_creative_projects__project_id__entities_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEntityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_EntityResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_entity_variants_api_v1_creative_projects__project_id__entities__entity_id__variants_get: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                page?: number;
+                /** @description 每页条数 */
+                size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 主体实体ID */
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_PageData_EntityResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_entity_api_v1_creative_projects__project_id__entities__entity_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 实体ID */
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEntityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_EntityResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_entity_api_v1_creative_projects__project_id__entities__entity_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 实体ID */
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    select_entity_current_version_api_v1_creative_projects__project_id__entities__entity_id__current_version_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 实体ID */
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectEntityVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_EntityResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_entity_versions_api_v1_creative_projects__project_id__entities__entity_id__versions_get: {
+        parameters: {
+            query?: {
+                /** @description 页码 */
+                page?: number;
+                /** @description 每页条数 */
+                size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 实体ID */
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_PageData_EntityVersionResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_entity_generation_api_v1_creative_projects__project_id__entities__entity_id__generations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 实体ID */
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEntityGenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_EntityVersionResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_entity_generation_api_v1_creative_projects__project_id__entities__entity_id__generations__version_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 实体ID */
+                entity_id: number;
+                /** @description 版本ID */
+                version_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_EntityVersionResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_entity_version_api_v1_creative_projects__project_id__entities__entity_id__versions__version_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 实体ID */
+                entity_id: number;
+                /** @description 版本ID */
+                version_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
                 };
             };
             /** @description Validation Error */
@@ -10261,7 +11724,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_list_StudioTimelineTrackResponse__"];
+                    "application/json": components["schemas"]["BaseResponse_list_TrackResponse__"];
                 };
             };
             /** @description Validation Error */
@@ -10275,7 +11738,7 @@ export interface operations {
             };
         };
     };
-    create_timeline_track_api_v1_studio_projects__project_id__tracks_post: {
+    create_track_api_v1_studio_projects__project_id__tracks_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -10285,9 +11748,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateStudioTimelineTrackRequest"] | null;
+                "application/json": components["schemas"]["CreateTrackRequest"];
             };
         };
         responses: {
@@ -10297,7 +11760,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioTimelineTrackResponse_"];
+                    "application/json": components["schemas"]["BaseResponse_TrackResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -10311,7 +11774,7 @@ export interface operations {
             };
         };
     };
-    update_timeline_track_api_v1_studio_projects__project_id__tracks__track_id__put: {
+    update_track_api_v1_studio_projects__project_id__tracks__track_id__put: {
         parameters: {
             query?: never;
             header?: never;
@@ -10325,7 +11788,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateStudioTimelineTrackRequest"];
+                "application/json": components["schemas"]["UpdateTrackRequest"];
             };
         };
         responses: {
@@ -10335,7 +11798,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioTimelineTrackResponse_"];
+                    "application/json": components["schemas"]["BaseResponse_TrackResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -10349,7 +11812,7 @@ export interface operations {
             };
         };
     };
-    delete_timeline_track_api_v1_studio_projects__project_id__tracks__track_id__delete: {
+    delete_track_api_v1_studio_projects__project_id__tracks__track_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -10358,486 +11821,6 @@ export interface operations {
                 project_id: number;
                 /** @description 轨道ID */
                 track_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_assets_api_v1_studio_projects__project_id__assets_get: {
-        parameters: {
-            query?: {
-                /** @description 资产类型：character/scene/prop */
-                asset_type?: components["schemas"]["StudioAssetType"] | null;
-                /** @description 页码 */
-                page?: number;
-                /** @description 每页条数 */
-                size?: number;
-            };
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_PageData_StudioAssetResponse__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_asset_api_v1_studio_projects__project_id__assets_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudioAssetRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioAssetResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_asset_variants_api_v1_studio_projects__project_id__assets__asset_id__variants_get: {
-        parameters: {
-            query?: {
-                /** @description 页码 */
-                page?: number;
-                /** @description 每页条数 */
-                size?: number;
-            };
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 资产ID */
-                asset_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_PageData_StudioAssetResponse__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_asset_histories_api_v1_studio_projects__project_id__assets__asset_id__histories_get: {
-        parameters: {
-            query?: {
-                /** @description 页码 */
-                page?: number;
-                /** @description 每页条数 */
-                size?: number;
-            };
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 资产ID */
-                asset_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_PageData_StudioAssetHistoryResponse__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_asset_generation_api_v1_studio_projects__project_id__assets__asset_id__generations_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 资产ID */
-                asset_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudioAssetGenerationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioAssetHistoryResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    retry_asset_generation_api_v1_studio_projects__project_id__assets__asset_id__generations__history_id__retry_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 资产ID */
-                asset_id: number;
-                /** @description 资产历史ID */
-                history_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioAssetHistoryResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_asset_history_api_v1_studio_projects__project_id__assets__asset_id__histories__history_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 资产ID */
-                asset_id: number;
-                /** @description 资产历史ID */
-                history_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_asset_api_v1_studio_projects__project_id__assets__asset_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 资产ID */
-                asset_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateStudioAssetRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioAssetResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_asset_api_v1_studio_projects__project_id__assets__asset_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 资产ID */
-                asset_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    select_asset_current_image_api_v1_studio_projects__project_id__assets__asset_id__current_image_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 资产ID */
-                asset_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SelectStudioAssetImageRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioAssetResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_keyframes_api_v1_studio_projects__project_id__keyframes_get: {
-        parameters: {
-            query?: {
-                /** @description 页码 */
-                page?: number;
-                /** @description 每页条数 */
-                size?: number;
-            };
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_PageData_StudioKeyframeResponse__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_keyframe_api_v1_studio_projects__project_id__keyframes_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudioKeyframeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioKeyframeResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_keyframe_api_v1_studio_projects__project_id__keyframes__keyframe_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description 关键帧ID */
-                keyframe_id: number;
             };
             cookie?: never;
         };
@@ -10875,7 +11858,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateStudioClipRequest"];
+                "application/json": components["schemas"]["CreateClipRequest"];
             };
         };
         responses: {
@@ -10885,7 +11868,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioClipResponse_"];
+                    "application/json": components["schemas"]["BaseResponse_ClipResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -10913,7 +11896,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateStudioClipRequest"];
+                "application/json": components["schemas"]["UpdateClipRequest"];
             };
         };
         responses: {
@@ -10923,7 +11906,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioClipResponse_"];
+                    "application/json": components["schemas"]["BaseResponse_ClipResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -10985,7 +11968,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateStudioClipContentRequest"];
+                "application/json": components["schemas"]["UpdateClipContentRequest"];
             };
         };
         responses: {
@@ -10995,7 +11978,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioClipResponse_"];
+                    "application/json": components["schemas"]["BaseResponse_ClipResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -11009,7 +11992,41 @@ export interface operations {
             };
         };
     };
-    list_workflows_api_v1_studio_projects__project_id__workflows_get: {
+    list_session_clips_api_v1_studio_projects__project_id__sessions__session_id__clips_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目ID */
+                project_id: number;
+                /** @description 会话ID */
+                session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaseResponse_list_ClipResponse__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_project_keyframes_api_v1_studio_projects__project_id__keyframes_get: {
         parameters: {
             query?: {
                 /** @description 页码 */
@@ -11032,7 +12049,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_PageData_StudioWorkflowResponse__"];
+                    "application/json": components["schemas"]["BaseResponse_PageData_KeyframeResponse__"];
                 };
             };
             /** @description Validation Error */
@@ -11046,91 +12063,19 @@ export interface operations {
             };
         };
     };
-    create_workflow_api_v1_studio_projects__project_id__workflows_post: {
+    create_keyframe_api_v1_studio_projects__project_id__keyframes_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 /** @description 项目ID */
                 project_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["CreateStudioWorkflowRequest"] | null;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioWorkflowResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_workflow_detail_api_v1_studio_projects__project_id__workflows__workflow_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioWorkflowResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_workflow_api_v1_studio_projects__project_id__workflows__workflow_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateStudioWorkflowRequest"];
+                "application/json": components["schemas"]["CreateKeyframeRequest"];
             };
         };
         responses: {
@@ -11140,7 +12085,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioWorkflowResponse_"];
+                    "application/json": components["schemas"]["BaseResponse_KeyframeResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -11154,15 +12099,15 @@ export interface operations {
             };
         };
     };
-    delete_workflow_api_v1_studio_projects__project_id__workflows__workflow_id__delete: {
+    delete_keyframe_api_v1_studio_projects__project_id__keyframes__keyframe_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 /** @description 项目ID */
                 project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
+                /** @description 关键帧ID */
+                keyframe_id: number;
             };
             cookie?: never;
         };
@@ -11175,433 +12120,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BaseResponse_NoneType_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_workflow_nodes_api_v1_studio_projects__project_id__workflows__workflow_id__nodes_get: {
-        parameters: {
-            query?: {
-                /** @description 页码 */
-                page?: number;
-                /** @description 每页条数 */
-                size?: number;
-            };
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_PageData_StudioWorkflowNodeResponse__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_text_generation_api_v1_studio_projects__project_id__workflows__workflow_id__text_generations_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudioTextGenerationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioWorkflowNodeResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_image_generation_api_v1_studio_projects__project_id__workflows__workflow_id__image_generations_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudioImageGenerationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioWorkflowNodeResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_video_generation_api_v1_studio_projects__project_id__workflows__workflow_id__video_generations_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudioVideoGenerationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioWorkflowNodeResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_workflow_node_detail_api_v1_studio_projects__project_id__workflows__workflow_id__nodes__node_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-                /** @description node ID */
-                node_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioWorkflowNodeResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_workflow_node_api_v1_studio_projects__project_id__workflows__workflow_id__nodes__node_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-                /** @description node ID */
-                node_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    retry_workflow_node_api_v1_studio_projects__project_id__workflows__workflow_id__nodes__node_id__retry_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-                /** @description node ID */
-                node_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioWorkflowNodeResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_workflow_clips_api_v1_studio_projects__project_id__workflows__workflow_id__clips_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-                /** @description workflow ID */
-                workflow_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_list_StudioClipResponse__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_project_detail_api_v1_studio_projects__project_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioProjectResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_project_api_v1_studio_projects__project_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateStudioProjectRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioProjectResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_project_api_v1_studio_projects__project_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目ID */
-                project_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_NoneType_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_ai_models_api_v1_studio_ai_models_get: {
-        parameters: {
-            query?: {
-                /** @description 模型类型：text/image/video */
-                type?: components["schemas"]["StudioAiOperationType"] | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BaseResponse_StudioAiModelListResponse_"];
                 };
             };
             /** @description Validation Error */

@@ -16,6 +16,7 @@ import type {
   StudioAspectRatio,
   StudioImageSize,
   StudioVideoMode,
+  StudioVideoProviderQuality,
 } from "@/lib/studio/studioAiResources";
 import type { StudioAiContextMode } from "@/lib/studio/studioClipUtils";
 import type { StudioPanelPlacement } from "@/lib/studio/studioEditorLayout";
@@ -61,6 +62,8 @@ interface StudioLeftPanelProps {
   onVideoAspectRatioChange: (value: StudioAspectRatio) => void;
   videoDurationSec: number;
   onVideoDurationSecChange: (value: number) => void;
+  videoQuality: StudioVideoProviderQuality;
+  onVideoQualityChange: (value: StudioVideoProviderQuality) => void;
   hasVideoInput: boolean;
   requireLogin: (action: () => void) => void;
   onBeforeClipFilterUpdate?: () => void;
@@ -111,6 +114,8 @@ export default function StudioLeftPanel({
   onVideoAspectRatioChange,
   videoDurationSec,
   onVideoDurationSecChange,
+  videoQuality,
+  onVideoQualityChange,
   hasVideoInput,
   requireLogin,
   onBeforeClipFilterUpdate,
@@ -215,6 +220,8 @@ export default function StudioLeftPanel({
           onVideoAspectRatioChange={onVideoAspectRatioChange}
           videoDurationSec={videoDurationSec}
           onVideoDurationSecChange={onVideoDurationSecChange}
+          videoQuality={videoQuality}
+          onVideoQualityChange={onVideoQualityChange}
           hasVideoInput={hasVideoInput}
           onSubmit={onSubmit}
           onCreateClip={onCreateClip}

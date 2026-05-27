@@ -1,25 +1,19 @@
 import {
   createStudioClip,
+  type StudioAspectRatio,
   type StudioClipResponse,
 } from "@/lib/api/studio";
-import type { components } from "@/lib/api/schema";
 import { STUDIO_MEDIA_CROSS_ORIGIN } from "@/lib/studio/studioMediaCrossOrigin";
 import { getLocalMediaAsset, setLocalMediaDuration } from "./localAssetsApi";
 import type { LocalAsset } from "./types";
 import type { LocalAssetDragPayload } from "./localAssetDrag";
 import { localAssetProtocolUrl, makeLocalAssetObjectKey } from "./localAssetUrl";
 
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
-
 interface CreateLocalAssetClipParams {
   projectId: number;
   payload: LocalAssetDragPayload;
   startSec: number;
   aspectRatio: StudioAspectRatio;
-}
-
-function clampTimelineDuration(durationSec: number | undefined): number {
-  return Math.min(Math.max(durationSec ?? 5, 1), 60);
 }
 
 function loadLocalVideoDuration(assetId: string): Promise<number> {
@@ -72,12 +66,9 @@ export async function createLocalAssetClip(
   }
 
   return createStudioClip(projectId, {
-    source_type: "upload",
-    media_type: asset.mediaType,
-    object_key: makeLocalAssetObjectKey(asset.id),
+    object_url: makeLocalAssetObjectKey(asset.id),
+    mime_type: asset.mediaType === "video" ? "video/mp4" : "image/png",
     start_sec: startSec,
-    duration_sec: asset.mediaType === "video" ? clampTimelineDuration(sourceDurationSec) : 3,
-    source_duration_sec: asset.mediaType === "video" ? sourceDurationSec : undefined,
     aspect_ratio: aspectRatio,
     title: asset.name,
   });

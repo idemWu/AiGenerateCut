@@ -5,6 +5,7 @@ import {
   Camera,
   ChevronDown,
   Loader2,
+  MousePointer2,
   Pause,
   Pencil,
   Play,
@@ -85,6 +86,26 @@ function TrimRightIcon({ className }: { className?: string }) {
   );
 }
 
+function RazorToolIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 8h14v2.2c-1 .42-1.55 1.05-1.55 1.8s.55 1.38 1.55 1.8V16H5v-2.2c1-.42 1.55-1.05 1.55-1.8S6 10.62 5 10.2V8Z" />
+      <path d="M8.75 12h6.5" />
+      <path d="M10.25 10.2h3.5" />
+      <path d="M10.25 13.8h3.5" />
+    </svg>
+  );
+}
+
 function SelectAllLeftIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -137,6 +158,7 @@ function ButtonTooltip({ label }: { label: string }) {
 }
 
 type ClipEditOperation = "trimLeft" | "split" | "trimRight";
+export type TimelineSelectTool = "select" | "razor";
 
 const TOOLBAR_TWO_ROW_BREAKPOINT_PX = 2060;
 
@@ -158,6 +180,8 @@ interface StudioTimelineToolbarProps {
   selectedClipCount: number;
   onRenameClip: () => void;
   onDeleteClip: () => void;
+  activeTimelineTool: TimelineSelectTool;
+  onTimelineToolChange: (tool: TimelineSelectTool) => void;
   canEditClipAtPlayhead: boolean;
   activeClipEditOperation: ClipEditOperation | null;
   onTrimClipLeftAtPlayhead: () => void;
@@ -188,6 +212,8 @@ export default function StudioTimelineToolbar({
   selectedClipCount,
   onRenameClip,
   onDeleteClip,
+  activeTimelineTool,
+  onTimelineToolChange,
   canEditClipAtPlayhead,
   activeClipEditOperation,
   onTrimClipLeftAtPlayhead,
@@ -205,6 +231,8 @@ export default function StudioTimelineToolbar({
   const editingClip = activeClipEditOperation != null;
   const iconActionButtonClass =
     "group relative inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs text-foreground hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50";
+  const toolButtonClass =
+    "group relative inline-flex h-6 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-xs text-muted-foreground hover:bg-white/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
 
   useEffect(() => {
     const el = toolbarRef.current;
@@ -306,6 +334,38 @@ export default function StudioTimelineToolbar({
             >
               <Trash2 className="h-4 w-4" />
               <ButtonTooltip label={t("studioTimelineDeleteClip")} />
+            </button>
+          </div>
+          <div className="h-5 w-px shrink-0 bg-white/10" />
+          <div className="flex shrink-0 items-center rounded-lg border border-white/10 bg-white/5 p-0.5">
+            <button
+              type="button"
+              onClick={() => onTimelineToolChange("select")}
+              className={`${toolButtonClass} ${
+                activeTimelineTool === "select" ? "bg-accent/20 text-accent" : ""
+              }`}
+              aria-label={t("studioTimelineSelectTool")}
+              aria-pressed={activeTimelineTool === "select"}
+            >
+              <MousePointer2 className="h-4 w-4" />
+              <ButtonTooltip label={t("studioTimelineSelectTool")} />
+            </button>
+            <button
+              type="button"
+              disabled={editingClip}
+              onClick={() => onTimelineToolChange("razor")}
+              className={`${toolButtonClass} ${
+                activeTimelineTool === "razor" ? "bg-accent/20 text-accent" : ""
+              }`}
+              aria-label={t("studioTimelineRazorTool")}
+              aria-pressed={activeTimelineTool === "razor"}
+            >
+              {activeClipEditOperation === "split" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RazorToolIcon className="h-5 w-5" />
+              )}
+              <ButtonTooltip label={t("studioTimelineRazorTool")} />
             </button>
           </div>
           <div className="h-5 w-px shrink-0 bg-white/10" />

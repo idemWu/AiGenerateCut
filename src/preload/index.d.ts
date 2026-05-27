@@ -34,10 +34,37 @@ export interface LocalMediaAPI {
   ) => Promise<LocalAssetView | null>
 }
 
+export interface StudioExportStartPayload {
+  width: number
+  height: number
+  fps: number
+  totalFrames: number
+  defaultFilename: string
+}
+
+export interface StudioExportProgressPayload {
+  phase: 'encode' | 'mux'
+  progress: number
+  nativeMode: true
+}
+
+export type StudioExportFinalizeResult = { outputPath: string } | { canceled: true }
+
+export interface StudioExportAPI {
+  isAvailable: () => Promise<boolean>
+  start: (payload: StudioExportStartPayload) => Promise<{ exportId: string }>
+  writeFrame: (exportId: string, frameIndex: number, buffer: ArrayBuffer) => Promise<void>
+  finalize: (exportId: string) => Promise<StudioExportFinalizeResult>
+  cancel: (exportId: string) => Promise<void>
+  onProgress: (callback: (payload: StudioExportProgressPayload) => void) => void
+  offProgress: () => void
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
     api: unknown
     localMedia: LocalMediaAPI
+    studioExport: StudioExportAPI
   }
 }

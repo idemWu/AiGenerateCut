@@ -33,16 +33,20 @@ import {
 import { getModelsForOperationType } from "@/lib/studio/studioAiModels";
 import type { StudioAiOperationType } from "@/lib/studio/studioAiModels";
 import {
+  buildVideoProviderParams,
   buildGenerationInputs,
+  clampVideoProviderQuality,
   clampVideoDuration,
   clearCoreVideoReferences,
   filterVideoAspectRatio,
+  isKelingV3OmniVideoGenerationModel,
   referencesHaveVideoInput,
   validateGenerationRequest,
   type StudioAiReference,
   type StudioAiValidationErrorKey,
   type StudioImageSize,
   type StudioVideoMode,
+  type StudioVideoProviderQuality,
 } from "@/lib/studio/studioAiResources";
 import { pruneVideoPool, removeClipFromVideoPool } from "@/lib/studio/playback/videoPool";
 import { useRequireLogin } from "@/lib/hooks/useRequireLogin";
@@ -86,13 +90,11 @@ import {
 } from "@/lib/studio/studioEditorLayout";
 import type {
   StudioClipResponse,
+  StudioAspectRatio,
   StudioProjectResponse,
   StudioTimelineTrackResponse,
   StudioWorkflowNodeResponse,
 } from "@/lib/api/studio";
-import type { components } from "@/lib/api/schema";
-
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
 
 interface StudioEditorClientProps {
   projectId: number;
@@ -240,6 +242,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
     filterVideoAspectRatio(project.aspect_ratio as StudioAspectRatio)
   );
   const [videoDurationSec, setVideoDurationSec] = useState(5);
+  const [videoQuality, setVideoQuality] = useState<StudioVideoProviderQuality>("pro");
   const [generating, setGenerating] = useState(false);
   const [creatingClip, setCreatingClip] = useState(false);
   const [pendingInputThumbsByNodeId, setPendingInputThumbsByNodeId] = useState<
@@ -352,7 +355,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
     async (clipId: number, outputId: number) => {
       removeClipFromVideoPool(videoPoolRef.current, clipId);
       await updateStudioClipContent(projectId, clipId, {
-        workflow_node_output_id: outputId,
+        session_node_output_id: outputId,
       });
       await refreshTracks();
     },
@@ -415,7 +418,8 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
         const duration = clampVideoDuration(
           videoDurationSec,
           hasVideoInput,
-          currentModel.supported_durations
+          currentModel.supported_durations,
+          selectedModelId
         );
         node = await createStudioVideoGeneration(projectId, workflowId, {
           prompt: prompt.trim(),
@@ -423,6 +427,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
           aspect_ratio: videoAspectRatio,
           duration_sec: duration,
           inputs,
+          params: buildVideoProviderParams(selectedModelId, videoQuality),
         });
       }
 
@@ -471,6 +476,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
     t,
     videoAspectRatio,
     videoDurationSec,
+    videoQuality,
     videoMode,
   ]);
 
@@ -492,14 +498,12 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
   );
 
   const handleAddToTimeline = useCallback(
-    async (outputId: number, mediaType: string, duration = 5) => {
+    async (outputId: number, mediaType: string, _duration = 5) => {
       pausePlayback();
       try {
         const clip = await createStudioClip(projectId, {
-          source_type: "node_output",
           start_sec: playheadSec,
-          duration_sec: duration,
-          workflow_node_output_id: outputId,
+          session_node_output_id: outputId,
           title:
             mediaType === "video"
               ? t("studioAiTypeVideo")
@@ -537,7 +541,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
       setSelectedClipId(clipId);
       const clip = findClipInTracks(tracks, clipId);
       if (clip) {
-        setActiveWorkflowId(clip.workflow_id);
+        setActiveWorkflowId(clip.workflow_id ?? null);
       }
       if (toolMode !== "filters") {
         setToolMode("ai");
@@ -559,10 +563,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
     setCreatingClip(true);
     try {
       const clip = await createStudioClip(projectId, {
-        source_type: "empty",
-        media_type: "text",
         start_sec: playheadSec,
-        duration_sec: 5,
         title: t("studioTimelineCreateClip"),
       });
       await refreshTracks();
@@ -577,14 +578,21 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
 
   useEffect(() => {
     if (typeModels.length === 0) return;
-    if (!selectedModelByType[aiOperationType]) {
+    if (!selectedModelId || !typeModels.some((model) => model.id === selectedModelId)) {
       setSelectedModelForType(aiOperationType, typeModels[0]!.id);
     }
-  }, [aiOperationType, selectedModelByType, setSelectedModelForType, typeModels]);
+  }, [aiOperationType, selectedModelId, setSelectedModelForType, typeModels]);
 
   useEffect(() => {
     setReferences([]);
   }, [aiOperationType, videoMode]);
+
+  useEffect(() => {
+    if (aiOperationType !== "video" || videoMode !== "first_frame") return;
+    if (isKelingV3OmniVideoGenerationModel(selectedModelId)) return;
+    setVideoMode("first_last_frame");
+    setReferences((prev) => clearCoreVideoReferences(prev));
+  }, [aiOperationType, selectedModelId, videoMode]);
 
   useEffect(() => {
     if (!currentModel?.supported_image_sizes?.length) return;
@@ -594,15 +602,35 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
   }, [currentModel, imageSize]);
 
   useEffect(() => {
+    if (aiOperationType !== "video") return;
+    const aspectRatio = filterVideoAspectRatio(
+      videoAspectRatio,
+      currentModel?.supported_aspect_ratios
+    );
+    if (aspectRatio !== videoAspectRatio) {
+      setVideoAspectRatio(aspectRatio);
+    }
+  }, [aiOperationType, currentModel, videoAspectRatio]);
+
+  useEffect(() => {
     const duration = clampVideoDuration(
       videoDurationSec,
       hasVideoInput,
-      currentModel?.supported_durations
+      currentModel?.supported_durations,
+      selectedModelId
     );
     if (duration !== videoDurationSec) {
       setVideoDurationSec(duration);
     }
-  }, [hasVideoInput, currentModel, videoDurationSec]);
+  }, [hasVideoInput, currentModel, selectedModelId, videoDurationSec]);
+
+  useEffect(() => {
+    if (aiOperationType !== "video") return;
+    const quality = clampVideoProviderQuality(selectedModelId, videoQuality);
+    if (quality !== videoQuality) {
+      setVideoQuality(quality);
+    }
+  }, [aiOperationType, selectedModelId, videoQuality]);
 
   const handleOperationTypeChange = useCallback((type: StudioAiOperationType) => {
     setAiOperationType(type);
@@ -617,6 +645,9 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
   const handleModelIdChange = useCallback(
     (id: string) => {
       setSelectedModelForType(aiOperationType, id);
+      if (aiOperationType === "video") {
+        setReferences((prev) => clearCoreVideoReferences(prev));
+      }
     },
     [aiOperationType, setSelectedModelForType]
   );
@@ -736,6 +767,8 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
       onVideoAspectRatioChange={setVideoAspectRatio}
       videoDurationSec={videoDurationSec}
       onVideoDurationSecChange={setVideoDurationSec}
+      videoQuality={videoQuality}
+      onVideoQualityChange={setVideoQuality}
       hasVideoInput={hasVideoInput}
       requireLogin={requireLogin}
       onBeforeClipFilterUpdate={pausePlayback}
@@ -841,7 +874,7 @@ function StudioEditorWorkspace({ projectId, project }: StudioEditorWorkspaceProp
     onClipOptimisticMove: handleClipOptimisticMove,
     onTracksMutate: refreshTracks,
     onWorkflowsMutate: mutateWorkflows,
-    onClipCreated: (clipId: number, _workflowId: number, startSec: number) =>
+    onClipCreated: (clipId: number, _workflowId: number | null, startSec: number) =>
       handleClipSelect(clipId, startSec),
     capturingKeyframe,
     onCaptureKeyframe: () => requireLogin(() => void handleCaptureKeyframe()),

@@ -1,8 +1,10 @@
-import type { components } from "@/lib/api/schema";
+import type {
+  StudioAiModelInfo,
+  StudioAiModelListResponse,
+  StudioAiOperationType,
+} from "@/lib/api/studio";
 
-export type StudioAiModelInfo = components["schemas"]["StudioAiModelInfo"];
-export type StudioAiModelListResponse = components["schemas"]["StudioAiModelListResponse"];
-export type StudioAiOperationType = components["schemas"]["StudioAiOperationType"];
+export type { StudioAiModelInfo, StudioAiModelListResponse, StudioAiOperationType };
 
 export function flattenStudioModels(
   list: StudioAiModelListResponse | undefined
@@ -33,7 +35,7 @@ export function getModelsForOperationType(
   type: StudioAiOperationType
 ): StudioAiModelInfo[] {
   if (!list) return [];
-  if (type === "text") return list.language_models ?? [];
+  if (type === "text") return list.text_models ?? list.language_models ?? [];
   if (type === "image") return list.image_models ?? [];
   return list.video_models ?? [];
 }

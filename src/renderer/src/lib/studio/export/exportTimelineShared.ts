@@ -1,5 +1,8 @@
-import type { StudioClipResponse, StudioTimelineTrackResponse } from "@/lib/api/studio";
-import type { components } from "@/lib/api/schema";
+import type {
+  StudioAspectRatio,
+  StudioClipResponse,
+  StudioTimelineTrackResponse,
+} from "@/lib/api/studio";
 import type { CanvasSize } from "@/lib/studio/composition/aspectRatioSize";
 import { aspectRatioToCanvasSize } from "@/lib/studio/composition/aspectRatioSize";
 import { renderFrameToCanvas } from "@/lib/studio/composition/renderFrame";
@@ -7,15 +10,15 @@ import { clipPoolKey } from "@/lib/studio/playback/videoPool";
 import { resolveClipsAtTimeSorted } from "@/lib/studio/playback/resolveClipsAtTime";
 import { loadImage, loadVideo, seekVideoAsync } from "./mediaCache";
 
-type StudioAspectRatio = components["schemas"]["StudioAspectRatio"];
-
 export type ExportPhase = "prepare" | "loadWasm" | "encode" | "mux";
 
 export interface ExportProgress {
   phase: ExportPhase;
   progress: number;
-  /** 是否使用 FFmpeg 兼容模式 */
+  /** 是否使用 FFmpeg.wasm 兼容模式 */
   compatMode?: boolean;
+  /** 是否走 Electron 主进程原生 FFmpeg 路径 */
+  nativeMode?: boolean;
 }
 
 export interface ExportTimelineOptions {
@@ -25,6 +28,8 @@ export interface ExportTimelineOptions {
   fps?: number;
   onProgress?: (p: ExportProgress) => void;
   signal?: AbortSignal;
+  /** Native 路径下用作 showSaveDialog 的默认文件名 */
+  defaultFilename?: string;
 }
 
 export interface ExportMediaMaps {
@@ -128,4 +133,15 @@ export function canvasToJpegBlob(canvas: HTMLCanvasElement, quality = 0.82): Pro
       quality
     );
   });
+}
+
+/**
+ * 读取 canvas 的 RGBA 像素数据为独立 ArrayBuffer，供主进程通过 IPC 接收。
+ * 使用 .slice() 复制底层 buffer，避免 IPC 传输 SharedArrayBuffer 或被复用的视图。
+ */
+export function canvasToRawRgba(canvas: HTMLCanvasElement): ArrayBuffer {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not available");
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
 }
